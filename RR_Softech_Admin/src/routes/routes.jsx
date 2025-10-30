@@ -1,7 +1,8 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import DashboardLayout from './../components/layout/DashboardLayout';
-import Services from './../pages/Services/Services';
+import Pending from "../pages/Pending/Pending";
+import ServicesList from "../pages/Services/ServicesList";
 
 
 
@@ -10,13 +11,13 @@ const router = createBrowserRouter([
     path: "/",
     element: <DashboardLayout />,
     children: [
-      { path: "/services", element: <Services /> },
-    //   { path: "/pending", element: <Pending /> },
+      { path: "/services", element: <ServicesList /> },
+      { path: "/pending", element: <Pending /> },
     //   { path: "/accepted", element: <Accepted /> },
     //   { path: "/rejected", element: <Rejected /> },
     //   { path: "/finished", element: <Finished /> },
     //   { path: "/free-consultancy", element: <FreeConsultancy /> },
-      { index: true, element: <Services /> }, 
+      { index: true, element: <ServicesList /> }, 
     ],
   },
 ]);
