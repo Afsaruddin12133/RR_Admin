@@ -1,5 +1,6 @@
 import React from "react";
 import { statusColors } from "../../utils/statusColors";
+import { TrendingUp } from "lucide-react";
 
 
 const ServiceCard = ({
@@ -51,7 +52,7 @@ const ServiceCard = ({
 
       <button
         onClick={onViewDetails}
-        className="mt-6 w-full bg-[#0062FF] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-300"
+        className="mt-6 w-full bg-[#0062FF] text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition-all duration-300 cursore-pointer"
       >
         View Details
       </button>
