@@ -3,25 +3,25 @@ import { services } from "../../api/services";
 import ServiceCard from '../../components/shared/ServiceCard';
 import Model from '../Services/Model';
 
-export default function Pending() {
+export default function Finished() {
   const [selectedService, setSelectedService] = useState(null);
 
   const handleViewDetails = (service) => {
     setSelectedService(service);
   };
 
-  const pendingServices = services.filter(service => service.status === "Pending");
+  const finishedServices = services.filter(service => service.status === "Finished");
 
   return (
     <div className="relative bg-[#F5F5F5]">
-      <h1 className="text-[#2563EB] text-2xl font-bold mb-1">Pending Services</h1>
+      <h1 className="text-[#2563EB] text-2xl font-bold mb-1">Finished Services</h1>
       <p className="text-gray-600 mb-6">
-        View and manage all your pending RR Softech services
+        View and manage all your finished RR Softech services
       </p>
 
-      {/* Pending Service Cards */}
+      {/* Finished Service Cards */}
       <div className="flex flex-wrap gap-6 ">
-        {pendingServices.map((service, index) => (
+        {finishedServices.map((service, index) => (
           <ServiceCard
             key={index}
             {...service}

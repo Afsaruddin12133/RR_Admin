@@ -1,26 +1,27 @@
-import React, { useState } from "react";
-import Model from "./Model";
-import ServiceCard from "../../components/shared/ServiceCard";
+import React, { useState } from 'react'
 import { services } from "../../api/services";
+import ServiceCard from '../../components/shared/ServiceCard';
+import Model from '../Services/Model';
 
-
-export default function ServicesList() {
+export default function Accepted() {
   const [selectedService, setSelectedService] = useState(null);
 
   const handleViewDetails = (service) => {
     setSelectedService(service);
   };
 
+  const acceptedServices = services.filter(service => service.status === "Accepted");
+
   return (
-    <div className="relativeb bg-[#F5F5F5]">
-      <h1 className="text-[#2563EB] text-2xl font-bold mb-1">My Services</h1>
+    <div className="relative bg-[#F5F5F5]">
+      <h1 className="text-[#2563EB] text-2xl font-bold mb-1">Accepted Services</h1>
       <p className="text-gray-600 mb-6">
-        Track and manage all your RR Softech services in one place
+        View and manage all your pending RR Softech services
       </p>
 
-      {/* Service Cards */}
+      {/* Accepted Service Cards */}
       <div className="flex flex-wrap gap-6">
-        {services.map((service, index) => (
+        {acceptedServices.map((service, index) => (
           <ServiceCard
             key={index}
             {...service}

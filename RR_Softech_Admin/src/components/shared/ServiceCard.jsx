@@ -1,5 +1,5 @@
 import React from "react";
-import { statusColors } from "../../utils/statusColors";
+import { statusColors } from "../../utils/services/statusColors";
 import { TrendingUp } from "lucide-react";
 
 
