@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { menuItems } from "../../utils/menuItems";
+import { menuItems } from './../../../utils/menuItems';
+
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
