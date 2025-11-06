@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { services } from "../../../api/services";
+import ServiceCard from "../../../components/shared/userDashboard/ServiceCard";
 import Model from "./Model";
-import ServiceCard from "../../components/shared/ServiceCard";
-import { services } from "../../api/services";
 
 
 export default function ServicesList() {
@@ -19,7 +19,7 @@ export default function ServicesList() {
       </p>
 
       {/* Service Cards */}
-      <div className="flex flex-wrap gap-6">
+      <div className="flex flex-wrap gap-12">
         {services.map((service, index) => (
           <ServiceCard
             key={index}

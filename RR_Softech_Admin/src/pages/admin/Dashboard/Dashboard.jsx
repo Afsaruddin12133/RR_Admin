@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Users, Activity, Clock, DollarSign } from "lucide-react";
+import { Search, Users} from "lucide-react";
 import { servicesData } from "../../../api/admin/servicesData";
 import AdminServiceCard from "../../../components/shared/admin/AdminServiceCard";
 import { stats } from "../../../api/admin/Stats";
@@ -41,7 +41,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 sm:gap-16 gap-4 mb-10">
         {stats.map((item, idx) => (
           <div
             key={idx}
@@ -53,17 +53,19 @@ export default function Dashboard() {
                 {item.value}
               </h3>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">{item.icon}</div>
+            <div className="p-3 bg-gray-50 rounded-lg">
+             {item.icon && React.createElement(item.icon, { className: "text-blue-600", size: 24 })}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Recent Services Section */}
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
         Recent Service Requests
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1  sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {filteredData.length > 0 ? (
           filteredData.map((service) => (
             <AdminServiceCard
@@ -72,6 +74,10 @@ export default function Dashboard() {
               onView={() => console.log("Viewing:", service.name)}
               onChat={() => console.log("Chat with:", service.name)}
               onPay={() => console.log("Pay for:", service.serviceTitle)}
+              viewButtonName="View"
+              chatButtonName="Chat"
+              payButtonName="Pay"
+              
             />
           ))
         ) : (

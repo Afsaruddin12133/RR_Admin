@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
-import { services } from "../../api/services";
-import ServiceCard from '../../components/shared/ServiceCard';
-import Model from '../Services/Model';
+import { useState } from 'react';
+import ServiceCard from '../../../components/shared/userDashboard/ServiceCard';
+import { services } from './../../../api/services';
+import Model from './../Services/Model';
 
 export default function Finished() {
   const [selectedService, setSelectedService] = useState(null);

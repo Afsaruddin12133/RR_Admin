@@ -18,20 +18,20 @@ export const servicesData = [
     name: "Fatima Akter",
     serviceTitle: "SEO Optimization",
     date: "Mar 10, 2025",
-    status: "Finished",
+    status: "Accepted",
   },
   {
     id: 4,
     name: "Rahim Ahmed",
     serviceTitle: "Social Media Marketing",
     date: "Apr 22, 2025",
-    status: "Rejected",
+    status: "Finished",
   },
   {
     id: 5,
     name: "Karim Hasan",
     serviceTitle: "Brand Identity Design",
     date: "May 05, 2025",
-    status: "Pending",
+    status: "Rejected",
   },
 ];

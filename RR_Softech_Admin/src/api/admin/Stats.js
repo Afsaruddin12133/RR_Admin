@@ -1,22 +1,24 @@
+import * as Icons from "lucide-react";
+
 export const  stats = [
     {
       title: "Total Customers",
       value: "542",
-      icon: <Users className="text-blue-600" size={20} />,
+      icon: Icons.Users,
     },
     {
       title: "Active Services",
       value: "126",
-      icon: <Activity className="text-cyan-500" size={20} />,
+      icon: Icons.Activity,
     },
     {
       title: "Pending Approvals",
       value: "14",
-      icon: <Clock className="text-yellow-500" size={20} />,
+      icon: Icons.Clock,
     },
     {
       title: "Total Revenue",
       value: "$48,250",
-      icon: <DollarSign className="text-green-500" size={20} />,
+      icon: Icons.DollarSign,
     },
   ];

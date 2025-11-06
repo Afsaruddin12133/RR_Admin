@@ -12,7 +12,7 @@ import {
 
 export const adminMenuItems = [
   { name: "Dashboard", icon: <LayoutDashboard size={18} />, path: "/admin" },
-  { name: "User Manage", icon: <Users size={18} />, path: "/admin/users" },
+  { name: "User Manage", icon: <Users size={18} />, path: "/admin/users-manage" },
   { name: "Services", icon: <Briefcase size={18} />, path: "/admin/services" },
   { name: "Transactions", icon: <CreditCard size={18} />, path: "/admin/transactions" },
   { name: "Analytics", icon: <BarChart3 size={18} />, path: "/admin/analytics" },

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { tabs } from "../../utils/services/tabsItems";
-import { getButtonClass } from "../../utils/services/getButtonClass";
-import RightSideModal from "../../components/shared/RightSideModal";
 import ChatSection from "./components/ChatSection";
 import TransactionSection from "./components/TransactionSection";
 import PaymentSection from "./components/PaymentSection";
 import FeedbackSection from "./components/FeedbackSection";
+import { tabs } from './../../../utils/services/tabsItems';
+import { getButtonClass } from './../../../utils/services/getButtonClass';
+import RightSideModal from './../../../components/shared/UserDashboard/RightSideModal';
 
 export default function Model({ selectedService, setSelectedService }) {
   const [activeTab, setActiveTab] = useState("Chatting");
