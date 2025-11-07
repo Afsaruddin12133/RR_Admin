@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Search } from "lucide-react";
 import AdminServiceCard from "../../../components/shared/admin/AdminServiceCard";
 import { servicesData } from "../../../api/admin/servicesData";
+import SearchBar from "../../../components/shared/admin/SearchBar";
 
 export default function Services() {
   const [activeFilter, setActiveFilter] = useState("All");
@@ -35,17 +36,14 @@ export default function Services() {
           Manage and track all service requests across different stages.
         </p>
       </div>
-
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-3 text-black-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search by "
-          className="pl-9 pr-3 py-2 border border-gray-200 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      {/* Search and Filter */}
+      <SearchBar
+        type="text"
+        value={search}
+        placeholder="service name or title"
+        onChange={(e) => setSearch(e.target.value)}
+        className="mb-6"
+      />
       <div className="pb-8 flex flex-row items-center  gap-1 md:gap-3 overflow-x-auto whitespace-nowrap">
         {["All", "Pending", "Accepted", "Rejected", "Finished"].map(
           (filter) => (

@@ -2,12 +2,10 @@ import React, { useState } from "react";
 
 import { Search } from "lucide-react";
 import { transactions } from "../../../api/admin/transactions";
+import SearchBar from "../../../components/shared/admin/SearchBar";
 
 export default function Transactions() {
-
   const [search, setSearch] = useState("");
-
-
 
   const filteredData = transactions.filter(
     (item) =>
@@ -24,23 +22,22 @@ export default function Transactions() {
   return (
     <div className="p-6  mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">Payments Overview</h2>
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Payments Overview
+        </h2>
         <p className="text-gray-500 text-sm">
           Track and manage all payment transactions.
         </p>
       </div>
 
       {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-        <input
-          type="text"
-          placeholder="Search by..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      </div>
+      <SearchBar
+        value={search}
+        type="text"
+        placeholder="customer name, service type, or ID"
+        onChange={(e) => setSearch(e.target.value)}
+        className="mb-2"
+      />
 
       {/* Table */}
       <div className="overflow-x-auto bg-white rounded-lg shadow">
@@ -74,7 +71,9 @@ export default function Transactions() {
                   <td className="py-3 px-4">{item.date}</td>
                   <td className="py-3 px-4">
                     <span
-                      className={`px-4 py-1 rounded-xl text-xs font-medium ${statusColor[item.status]}`}
+                      className={`px-4 py-1 rounded-xl text-xs font-medium ${
+                        statusColor[item.status]
+                      }`}
                     >
                       {item.status}
                     </span>

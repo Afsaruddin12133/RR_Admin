@@ -1,14 +1,19 @@
 // File: UsersManagement.jsx
 import React, { useState, useEffect } from "react";
 import { UserPlus, Search } from "lucide-react";
+import UserModal from "../../../components/shared/admin/UserModel";
+import SearchBar from "../../../components/shared/admin/SearchBar";
 
 const UsersManagement = () => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [openModal, setOpenModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: "", email: "", status: "Active" });
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    status: "Active",
+  });
 
-  // Simulate fetching data from API
   useEffect(() => {
     const fetchUsers = async () => {
       const data = [
@@ -32,9 +37,9 @@ const UsersManagement = () => {
     fetchUsers();
   }, []);
 
-  // Handle adding new user
   const handleAddUser = () => {
-    if (!newUser.name || !newUser.email) return alert("All fields are required");
+    if (!newUser.name || !newUser.email)
+      return alert("All fields are required");
     setUsers([
       ...users,
       {
@@ -47,12 +52,11 @@ const UsersManagement = () => {
     setOpenModal(false);
   };
 
-  // Filter users based on search
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.status.toLowerCase().includes(searchTerm.toLowerCase()) 
+      user.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -74,13 +78,8 @@ const UsersManagement = () => {
         </button>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-3 text-gray-400 w-4 h-4" />
-        <input
-          type="text"
-          placeholder="Search by name, email, or status..."
-          className="pl-9 pr-3 py-2 border border-gray-200 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+      <div className="mb-6">
+        <SearchBar
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -118,57 +117,15 @@ const UsersManagement = () => {
         ))}
       </div>
 
-      {/* Add User Modal */}
-      {openModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Blur Background */}
-          <div
-            className="absolute inset-0 backdrop-blur-sm bg-black/20"
-            onClick={() => setOpenModal(false)}
-          ></div>
-
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-lg shadow-lg p-6 w-full max-w-md z-50">
-            <h2 className="text-lg font-semibold mb-4">Add New User</h2>
-            <div className="space-y-3">
-              <input
-                placeholder="Full Name"
-                value={newUser.name}
-                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                className="border rounded-md p-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <input
-                placeholder="Email Address"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className="border rounded-md p-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <select
-                className="border rounded-md p-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={newUser.status}
-                onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-              <div className="flex justify-end gap-3 pt-2">
-                <button
-                  onClick={() => setOpenModal(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-100 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddUser}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 transition-all"
-                >
-                  Add User
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Reusable User Modal */}
+      <UserModal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        onSubmit={handleAddUser}
+        title="Add New User"
+        userData={newUser}
+        setUserData={setNewUser}
+      />
     </div>
   );
 };
