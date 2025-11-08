@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
-import { menuItems } from './../../../utils/menuItems';
-
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Key, LogOut, Menu, X } from "lucide-react";
+import { menuItems } from "./../../../utils/menuItems";
+import useAuth from "../../../hooks/UserDashboard/useAuth";
+import { toast } from "react-toastify";
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -27,7 +30,7 @@ export default function Sidebar() {
         ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         {/* Navigation */}
-        <nav className="mt-4 flex-1 space-y-1 px-2 overflow-y-auto">
+        <nav className="mt-4 flex-1 space-y-1 px-2 overflow-y-auto ">
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -48,7 +51,26 @@ export default function Sidebar() {
             );
           })}
         </nav>
-
+        <div>
+          <Link to="/change-password"
+            className="flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-all"
+          >
+            <Key size={18} />
+            Password Change
+          </Link>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              logout();
+              toast.success("Logout Sucessfully");
+              navigate("/");
+            }}
+            className="flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-all mb-16"
+          >
+            <LogOut size={18} />
+            Log Out
+          </button>
+        </div>
         {/* Footer */}
         <div className="p-4 text-xs text-center text-blue-200 border-t border-blue-500">
           © 2025 RR Softech

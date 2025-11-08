@@ -17,6 +17,8 @@ import Analytics from "../pages/admin/Analytics/Analytics";
 import Feedback from "../pages/admin/Feedback/Feedback";
 import Messages from "../pages/admin/Messages/Messages";
 import Settings from "../pages/admin/Settings/Settings";
+import AuthModal from "../components/shared/userDashboard/auth/AuthModal";
+import ChangePassword from "../components/common/ChangePassword";
 
 
 
@@ -31,7 +33,8 @@ const router = createBrowserRouter([
       { path: "/rejected", element: <Rejected /> },
       { path: "/finished", element: <Finished /> },
       { path: "/free-consultancy", element: <FreeConsultancy /> },
-      { index: true, element: <ServicesList /> }, 
+      { path: "/change-password", element: <ChangePassword /> },
+      { index: true, element: <AuthModal  /> }, 
     ],
   },
   {
