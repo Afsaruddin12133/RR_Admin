@@ -1,13 +1,14 @@
 import React from "react";
 import { toast } from "react-toastify";
 import { registerUser } from "../../../../api/auth";
-import { handleApiError } from "../../../../utils/services/handleApiError";
-import { registerFields } from './../../../../utils/services/registerFields';
 import CommonForm from "../../../common/CommonForm";
+import { handleApiError } from "../../../../utils/UserDashboard/services/handleApiError";
+import { registerFields } from "../../../../utils/UserDashboard/services/registerFields";
+
 
 
 export default function RegisterFrom({setMode}) {
-    // Registration handler
+  
       async function handleRegister(values) {
         try {
           const payload = {

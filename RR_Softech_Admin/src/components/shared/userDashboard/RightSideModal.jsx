@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import ModelTitle from "./ModelTitle";
 
 export default function RightSideModal({ isOpen, onClose, selectedService, children }) {
-    motion
+  motion
   return (
     <AnimatePresence>
       {isOpen && (
@@ -24,7 +24,7 @@ export default function RightSideModal({ isOpen, onClose, selectedService, child
           >
             {/* Model Header */}
             <div className="">
-              <ModelTitle selectedService= {selectedService} onClose={onClose}/>
+              <ModelTitle selectedService={selectedService} onClose={onClose} />
             </div>
 
             {/* Modal Body */}

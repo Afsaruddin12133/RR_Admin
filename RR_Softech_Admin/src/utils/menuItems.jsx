@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 export const menuItems = [
-  { name: "Services", icon: <LayoutDashboard size={18} />, path: "/services" },
+  { name: "All Orders", icon: <LayoutDashboard size={18} />, path: "/services" },
   { name: "Pending", icon: <Clock size={18} />, path: "/pending" },
   { name: "Accepted", icon: <CheckCircle size={18} />, path: "/accepted" },
   { name: "Rejected", icon: <XCircle size={18} />, path: "/rejected" },

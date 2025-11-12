@@ -1,6 +1,7 @@
 import React from "react";
 import { Eye, MessageSquare, DollarSign } from "lucide-react";
-import { statusColors } from "../../../utils/services/statusColors";
+import { statusColors } from "../../../utils/UserDashboard/services/statusColors";
+
 
 export default function AdminServiceCard({
   name,

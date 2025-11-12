@@ -1,8 +1,10 @@
 import React from "react";
 import useAuth from "../../../../hooks/UserDashboard/useAuth";
-import { handleApiError } from "../../../../utils/services/handleApiError";
-import { forgetFields } from './../../../../utils/services/forgetFields';
 import CommonForm from "../../../common/CommonForm";
+import { forgetFields } from "../../../../utils/UserDashboard/services/forgetFields";
+import { handleApiError } from "../../../../utils/UserDashboard/services/handleApiError";
+
+
 
 
 export default function ForgetPasswordFrom({setMode}) {

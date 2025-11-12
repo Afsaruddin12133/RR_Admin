@@ -1,12 +1,28 @@
-// src/hooks/useAuth.js
+
 import { useCallback, useEffect, useState } from "react";
 import apiClient, { refreshTokenApi } from "../../api/auth";
+// import { getStoredTokens } from './../../utils/UserDashboard/authUtils/getStoredTokens';
+// import { clearTokens } from './../../utils/UserDashboard/authUtils/clearTokens';
+
+
 
 
 const REFRESH_KEY = "auth_refresh";
 const ACCESS_KEY = "auth_access";
 const USER_KEY = "auth_user"; 
+let isRefreshing = false;
+let refreshPromise = null;
 
+export function saveTokens({ access, refresh, user = null }) {
+  if (access) localStorage.setItem(ACCESS_KEY, access);
+  if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+export function clearTokens() {
+  localStorage.removeItem(ACCESS_KEY);
+  localStorage.removeItem(REFRESH_KEY);
+  localStorage.removeItem(USER_KEY);
+}
 export function getStoredTokens() {
   return {
     access: localStorage.getItem(ACCESS_KEY),
@@ -14,21 +30,6 @@ export function getStoredTokens() {
     user: JSON.parse(localStorage.getItem(USER_KEY) || "null"),
   };
 }
-
-export function saveTokens({ access, refresh, user = null }) {
-  if (access) localStorage.setItem(ACCESS_KEY, access);
-  if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
-  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
-
-export function clearTokens() {
-  localStorage.removeItem(ACCESS_KEY);
-  localStorage.removeItem(REFRESH_KEY);
-  localStorage.removeItem(USER_KEY);
-}
-
-let isRefreshing = false;
-let refreshPromise = null;
 
 export default function useAuth() {
   const [auth, setAuth] = useState(getStoredTokens());

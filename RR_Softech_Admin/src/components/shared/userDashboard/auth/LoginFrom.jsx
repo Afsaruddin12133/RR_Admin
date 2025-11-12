@@ -4,15 +4,13 @@ import CommonForm from "../../../common/CommonForm";
 import useAuth from "../../../../hooks/UserDashboard/useAuth";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../../../api/auth";
-import { handleApiError } from "../../../../utils/services/handleApiError";
-import { loginFields } from './../../../../utils/services/loginFields';
+import { handleApiError } from "../../../../utils/UserDashboard/services/handleApiError";
+import { loginFields } from "../../../../utils/UserDashboard/services/loginFields";
 
+export default function LoginFrom({ setMode }) {
+  const { setAuthState } = useAuth();
+  const navigate = useNavigate();
 
-export default function LoginFrom({setMode}) {
-    const { setAuthState } = useAuth();
-      const navigate = useNavigate();
-
-      // Login handler
   async function handleLogin(values) {
     try {
       const { email, password } = values;
@@ -23,8 +21,7 @@ export default function LoginFrom({setMode}) {
         user: { email },
       });
       toast.success("Logged in successfully");
-        navigate("/services");
-
+      navigate("/services");
     } catch (err) {
       handleApiError(err, "Login failed. Please try again.");
       throw err;

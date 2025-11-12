@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { changeFields } from "../../utils/services/changeFields";
 import { toast } from "react-toastify";
 import { changePasswordApi } from "../../api/auth";
-import { handleApiError } from "../../utils/services/handleApiError";
 import CommonForm from "./CommonForm";
 import useAuth from "../../hooks/UserDashboard/useAuth";
 import { useNavigate } from "react-router-dom";
+import { changeFields } from "../../utils/UserDashboard/services/changeFields";
+import { handleApiError } from "../../utils/UserDashboard/services/handleApiError";
 
 export default function ChangePassword() {
     const navigate = useNavigate();

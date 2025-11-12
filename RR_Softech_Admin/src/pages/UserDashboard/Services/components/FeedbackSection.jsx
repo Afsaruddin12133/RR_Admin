@@ -5,15 +5,10 @@ const FeedbackSection = () => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [feedback, setFeedback] = useState("");
-  const [image, setImage] = useState(null);
-
-  const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
-  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log({ rating, feedback, image });
+    console.log({ rating, feedback});
   };
 
   return (
@@ -58,24 +53,6 @@ const FeedbackSection = () => {
           value={feedback}
           onChange={(e) => setFeedback(e.target.value)}
           required
-        />
-      </div>
-
-      {/* Image Upload */}
-      <div>
-        <label className="block text-gray-700 font-medium mb-2">
-          Add Image (Optional)
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="block w-full text-sm text-gray-600
-                     file:mr-4 file:py-2 file:px-4
-                     file:rounded-lg file:border-0
-                     file:text-sm file:font-medium
-                     file:bg-blue-600 file:text-white
-                     hover:file:bg-blue-700 cursor-pointer"
         />
       </div>
 
