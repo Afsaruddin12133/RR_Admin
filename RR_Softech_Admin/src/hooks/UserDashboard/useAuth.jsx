@@ -9,25 +9,29 @@ import apiClient, { refreshTokenApi } from "../../api/auth";
 
 const REFRESH_KEY = "auth_refresh";
 const ACCESS_KEY = "auth_access";
-const USER_KEY = "auth_user"; 
+const USER_KEY = "auth_user";
+const Role = "role" ;
 let isRefreshing = false;
 let refreshPromise = null;
 
-export function saveTokens({ access, refresh, user = null }) {
+export function saveTokens({ access, refresh, user = null ,role}) {
   if (access) localStorage.setItem(ACCESS_KEY, access);
   if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
   if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  if (role) localStorage.setItem(Role, JSON.stringify(role));
 }
 export function clearTokens() {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);
   localStorage.removeItem(USER_KEY);
+  localStorage.removeItem(Role);
 }
 export function getStoredTokens() {
   return {
     access: localStorage.getItem(ACCESS_KEY),
     refresh: localStorage.getItem(REFRESH_KEY),
     user: JSON.parse(localStorage.getItem(USER_KEY) || "null"),
+    role:JSON.parse(localStorage.getItem(Role)),
   };
 }
 

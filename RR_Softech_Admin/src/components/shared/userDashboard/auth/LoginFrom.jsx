@@ -7,7 +7,7 @@ import { loginUser } from "../../../../api/auth";
 import { handleApiError } from "../../../../utils/UserDashboard/services/handleApiError";
 import { loginFields } from "../../../../utils/UserDashboard/services/loginFields";
 
-export default function LoginFrom({ setMode }) {
+export default function LoginFrom({ setMode,role }) {
   const { setAuthState } = useAuth();
   const navigate = useNavigate();
 
@@ -19,9 +19,16 @@ export default function LoginFrom({ setMode }) {
         access: tokenObj.access,
         refresh: tokenObj.refresh,
         user: { email },
+        role:role,
       });
       toast.success("Logged in successfully");
-      navigate("/services");
+      if(role === "CUSTOMER"){
+        navigate("/user/services");
+      }else if(role === "OWNER"){
+        navigate("/admindashboard");
+      }else if(role === "EMPLOYEE"){
+        navigate("/employeedashboard");
+      }
     } catch (err) {
       handleApiError(err, "Login failed. Please try again.");
       throw err;

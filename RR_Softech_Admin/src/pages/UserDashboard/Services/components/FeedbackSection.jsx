@@ -1,18 +1,80 @@
 import React, { useState } from "react";
 import { Star } from "lucide-react";
+import { toast } from "react-toastify";
+import { postFeedback } from "../../../../api/UserDashboard/feedback";
+import ReviewList from "./ReviewList";
 
-const FeedbackSection = () => {
+const FeedbackSection = ({ productId }) => {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
   const [feedback, setFeedback] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ rating, feedback});
+
+    if (!rating || rating < 1) {
+      toast.error("Please provide a rating before submitting.");
+      return;
+    }
+
+    const payload = {
+      order: productId,
+      rating,
+      comment: feedback.trim(),
+    };
+
+    try {
+      await postFeedback(payload);
+
+      toast.success("Feedback submitted successfully!");
+      setRating(0);
+      setFeedback("");
+    } catch (error) {
+      const res = error?.response;
+      const data = res?.data;
+
+      // Handle order already reviewed
+      if (Array.isArray(data?.order) && data.order[0]?.includes("exists")) {
+        toast.error("You have already submitted a review for this order.");
+        return;
+      }
+
+      // Known status codes
+      switch (res?.status) {
+        case 400:
+          toast.error("Invalid request. Please check your input.");
+          return;
+
+        case 401:
+          toast.error("You must be logged in to submit a review.");
+          return;
+
+        case 403:
+          toast.error("You are not allowed to submit feedback for this order.");
+          return;
+
+        case 404:
+          toast.error("Order not found.");
+          return;
+
+        case 500:
+          toast.error("Server error. Please try again later.");
+          return;
+
+        default:
+          break;
+      }
+
+      // Fallback error message
+      toast.error(
+        data?.message || "Failed to submit feedback. Please try again."
+      );
+    }
   };
 
   return (
-    <form
+    <div>
+      <form
       onSubmit={handleSubmit}
       className="mx-auto bg-white p-6 flex flex-col space-y-5"
     >
@@ -64,6 +126,8 @@ const FeedbackSection = () => {
         Submit Feedback
       </button>
     </form>
+    {/* <ReviewList /> */}
+    </div>
   );
 };
 

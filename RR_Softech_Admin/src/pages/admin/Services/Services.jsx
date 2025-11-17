@@ -1,59 +1,97 @@
-// File: src/features/admin/pages/Services.jsx
-import React, { useState } from "react";
-import { Search } from "lucide-react";
-import AdminServiceCard from "../../../components/shared/admin/AdminServiceCard";
-import { servicesData } from "../../../api/admin/servicesData";
+// File: src/features/admin/pages/Orders.jsx
+import React, { useEffect, useState } from "react";
 import SearchBar from "../../../components/shared/admin/SearchBar";
+import { fetchOrders } from "../../../api/UserDashboard/orders";
+import OrderCard from "../../../components/shared/userDashboard/OrderCard";
 
-export default function Services() {
+export default function Orders() {
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [activeFilter, setActiveFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Filter by status
-  const filteredByStatus =
-    activeFilter === "All"
-      ? servicesData
-      : servicesData.filter(
-          (service) =>
-            service.status.toLowerCase() === activeFilter.toLowerCase()
-        );
+  // -------------------------------
+  // Fetch Orders from API
+  // -------------------------------
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        setLoading(true);
+        const data = await fetchOrders();
+        setOrders(data);
+        setFilteredOrders(data);
+      } catch (error) {
+        console.error("Failed to load orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrders();
+  }, []);
 
-  // Filter by search
-  const filteredData = filteredByStatus.filter(
-    (service) =>
-      service.name.toLowerCase().includes(search.toLowerCase()) ||
-      service.serviceTitle.toLowerCase().includes(search.toLowerCase())
-  );
+  // -------------------------------
+  // Handle filtering
+  // -------------------------------
+  useEffect(() => {
+    let updated = [...orders];
+
+    // Filter by status
+    if (activeFilter !== "All") {
+      updated = updated.filter(
+        (item) =>
+          item.status.toLowerCase() === activeFilter.toLowerCase()
+      );
+    }
+
+    // Search by plan details
+    if (search.trim() !== "") {
+      updated = updated.filter((item) =>
+        item.plan_details.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    setFilteredOrders(updated);
+  }, [activeFilter, search, orders]);
+
+  // -------------------------------
+  // View Details Handler
+  // -------------------------------
+  const handleViewDetails = (order) => {
+    console.log("Viewing order:", order);
+    // You can open modal or navigate here
+  };
 
   return (
-    <div className="p-6 w-full bg-white h-[100vh] ">
+    <div className="p-6 w-full bg-white min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Service Requests
-        </h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Orders</h1>
         <p className="text-gray-500 text-sm">
-          Manage and track all service requests across different stages.
+          Manage and track all user orders and service purchases.
         </p>
       </div>
-      {/* Search and Filter */}
+
+      {/* Search Bar */}
       <SearchBar
         type="text"
         value={search}
-        placeholder="service name or title"
+        placeholder="Search by plan title..."
         onChange={(e) => setSearch(e.target.value)}
         className="mb-6"
       />
-      <div className="pb-8 flex flex-row items-center  gap-1 md:gap-3 overflow-x-auto whitespace-nowrap">
-        {["All", "Pending", "Accepted", "Rejected", "Finished"].map(
+
+      {/* Status Filter Tabs */}
+      <div className="pb-8 flex flex-row items-center gap-2 md:gap-3 overflow-x-auto whitespace-nowrap">
+        {["All", "PENDING", "ACTIVE", "CANCELLED", "PAID"].map(
           (filter) => (
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
-              className={`md:px-4 px-2 py-2 rounded-xl text-sm font-medium transition-all  ${
+              className={`md:px-4 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
                 activeFilter === filter
                   ? "bg-gray-300 text-black shadow-sm"
-                  : "bg-white-600 text-black-600 hover:bg-gray-200"
+                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
               }`}
             >
               {filter}
@@ -62,26 +100,24 @@ export default function Services() {
         )}
       </div>
 
-      {/* Services Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredData.length > 0 ? (
-          filteredData.map((service) => (
-            <AdminServiceCard
-              key={service.id}
-              {...service}
-              onView={() => console.log("Viewing:", service.name)}
-              onChat={() => console.log("Chat with:", service.name)}
-              onPay={() => console.log("Pay for:", service.serviceTitle)}
-              viewButtonName="View Details"
-              viewButtonStyle="w-[250px]  flex items-center justify-center sm:justify-center gap-2 border border-gray-200 rounded-lg px-3 py-2 hover:bg-gray-50 transition-all cursor-pointer"
+      {/* Content */}
+      {loading ? (
+        <p className="text-gray-500 text-center py-10">Loading orders...</p>
+      ) : filteredOrders.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredOrders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              onViewDetails={() => handleViewDetails(order)}
             />
-          ))
-        ) : (
-          <p className="text-gray-500 col-span-full text-center py-6">
-            No matching services found.
-          </p>
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-500 text-center py-8">
+          No matching orders found.
+        </p>
+      )}
     </div>
   );
 }

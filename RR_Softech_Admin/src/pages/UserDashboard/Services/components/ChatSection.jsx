@@ -1,9 +1,16 @@
 import ChatBox from "./../../../../components/common/ChatBox";
 
-export default function ChatSection() {
+export default function ChatSection({loading,chatData,productId}) {
+  
   return (
     <div>
-      <ChatBox currentUser="user" storageKey="chatMessages" />
+      <ChatBox 
+      currentUser="CUSTOMER" 
+      storageKey="chatMessages" 
+      orderId = {productId}
+      chatData={chatData}
+      loading={loading}
+      />
     </div>
   );
 }

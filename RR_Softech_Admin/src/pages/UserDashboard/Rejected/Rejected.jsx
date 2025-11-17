@@ -41,7 +41,7 @@ export default function Rejected() {
       </p>
 
       {/* Rejected Order Cards */}
-      <div className="flex flex-wrap gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {orders.length > 0 ? (
           orders.map((order) => (
             <OrderCard
@@ -60,7 +60,7 @@ export default function Rejected() {
         <Model 
         selectedOrder={selectedOrder} 
         setSelectedOrder={setSelectedOrder}
-        visibleTabs={['Chatting', 'Transaction', 'Payment']}
+        visibleTabs={ ["Chatting", "Reviews"]}
          />
       )}
     </div>

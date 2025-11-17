@@ -4,28 +4,34 @@ import { registerUser } from "../../../../api/auth";
 import CommonForm from "../../../common/CommonForm";
 import { handleApiError } from "../../../../utils/UserDashboard/services/handleApiError";
 import { registerFields } from "../../../../utils/UserDashboard/services/registerFields";
+import { useNavigate } from "react-router-dom";
 
-
-
-export default function RegisterFrom({setMode}) {
+export default function RegisterFrom({ setMode, role }) {
+  const navigate = useNavigate();
+  console.log(role);
   
-      async function handleRegister(values) {
-        try {
-          const payload = {
-            email: values.email,
-            password: values.password,
-            first_name: values.first_name,
-            last_name: values.last_name,
-            role: "CUSTOMER",
-          };
-          await registerUser(payload);
-          toast.success("Registration successful! Please log in to continue.");
-          setMode("login");
-        } catch (err) {
-          handleApiError(err, "Registration failed. Please try again.");
-          throw err;
-        }
+
+  async function handleRegister(values) {
+    try {
+      const payload = {
+        email: values.email,
+        password: values.password,
+        first_name: values.first_name,
+        last_name: values.last_name,
+        role: role,
+      };
+      await registerUser(payload);
+      toast.success("Registration successful! Please log in to continue.");
+      if(role=="EMPLOYEE"){
+        navigate("pending")
+      }else{
+        setMode("login");
       }
+    } catch (err) {
+      handleApiError(err, "Registration failed. Please try again.");
+      throw err;
+    }
+  }
   return (
     <>
       <h3 className="text-2xl font-bold mb-2 text-center">Sign Up</h3>

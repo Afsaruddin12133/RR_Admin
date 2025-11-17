@@ -1,113 +1,91 @@
-import React, { useState } from "react";
-import { Calendar, DollarSign, FileText, Clock, Trash2 } from "lucide-react";
-import ShowMilestone from "../../../../components/shared/userDashboard/ShowMilestone";
+import { Clock, FileText, Trash2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { statusColors } from "../../../../utils/UserDashboard/services/statusColors";
 
-export default function Milestone() {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    amount: "",
-    due_date: "",
-  });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+export default function Milestone({milestoneData,loading,setActiveTab}) {
+
+  const [milestones,setMilestones] = useState([])
+  
+  
+  useEffect(()=>{
+    setMilestones(milestoneData);
+  },[milestoneData])
+
+  if(loading) `<p>Miletone are loading...</p>`
+  
+  const handlePayNow = (id) => {
+    const milestone = milestones.find((m) => m.id === id);
+
+    if (!milestone) {
+      console.error("Milestone not found!");
+      return;
+    }
+    alert(`Processing payment for: ${milestone.title} ($${milestone.amount})`);
+    setActiveTab("Payment")
   };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Milestone Submit" , formData);
-    
-  };
-
   return (
-    <div className="max-w-8xl mx-auto p-6 space-y-8">
-      <div className="bg-white  rounded-2xl p-6 border border-gray-200">
-        <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-          Create New Milestone
-        </h2>
+    <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-200">
+      <h2 className="text-2xl font-semibold text-blue-600 mb-4">
+        My Milestones
+      </h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="Enter milestone title"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-
-          <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount
-            </label>
-            <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-              <DollarSign size={16} className="text-gray-500 mr-2" />
-              <input
-                type="number"
-                name="amount"
-                value={formData.amount}
-                onChange={handleChange}
-                placeholder="Enter amount"
-                className="w-full focus:outline-none"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="col-span-1 md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe the milestone..."
-              rows="3"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"
-              required
-            />
-          </div>
-
-          <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Due Date
-            </label>
-            <div className="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500">
-              <Calendar size={16} className="text-gray-500 mr-2" />
-              <input
-                type="date"
-                name="due_date"
-                value={formData.due_date}
-                onChange={handleChange}
-                className="w-full focus:outline-none"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="col-span-1 flex items-end">
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition"
-            >
-              Add Milestone
-            </button>
-          </div>
-        </form>
-      </div>
-      <ShowMilestone />
+      {milestones?.length === 0 ? (
+        <p className="text-gray-500 text-center py-8">
+          No milestones created yet.
+        </p>
+      ) : (
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="text-left bg-gray-100 border-b">
+              <th className="p-3 text-sm font-medium text-gray-700">Title</th>
+              <th className="p-3 text-sm font-medium text-gray-700">Amount</th>
+              <th className="p-3 text-sm font-medium text-gray-700">
+                Due Date
+              </th>
+              <th className="p-3 text-sm font-medium text-gray-700">Status</th>
+              <th className="p-3 text-sm font-medium text-gray-700 text-center">Pay Now</th>
+            </tr>
+          </thead>
+          <tbody>
+            {milestones?.map((m) => (
+              <tr
+                key={m.id}
+                className="border-b hover:bg-gray-50 transition-colors"
+              >
+                <td className="p-3 flex items-center space-x-2">
+                  <span>{m.title}</span>
+                </td>
+                <td className="p-3 text-gray-700">${m.amount}</td>
+                <td className="p-3 text-gray-700 flex items-center space-x-2">
+                  <span>{m.due_date}</span>
+                </td>
+                <td className="p-3">
+                  <span
+                    className={`px-3 py-1 text-sm font-medium rounded-[8px] ${
+                      m.status === "PENDING"
+                        ? statusColors.PENDING
+                        : m.status === "ACTIVE"
+                        ? statusColors.ACTIVE
+                        : statusColors.CANCELLED
+                    }`}
+                  >
+                    {m.status}
+                  </span>
+                </td>
+                <td className="">
+                  <button
+                    onClick={() => handlePayNow(m.id)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-sm flex items-center justify-center gap-2 mx-auto"
+                  >
+                    Pay Now
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

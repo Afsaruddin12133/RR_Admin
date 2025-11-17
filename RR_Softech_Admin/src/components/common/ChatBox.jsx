@@ -1,122 +1,129 @@
-import { File, Paperclip, Send } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { Paperclip, Send } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { fetchChatting, postChatting } from "../../api/UserDashboard/chatting";
 
 export default function ChatBox({
-  currentUser = "user",
-  storageKey = "chatMessages",
+  currentUser,
+  orderId,
   divHight = "sm:h-[670px]",
+  chatUser = null   
+
 }) {
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem(storageKey);
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: 1,
-            sender: "user",
-            text: "Hi! I wanted to check on the status of my PPC campaign.",
-            time: "10:30 AM",
-          },
-          {
-            id: 2,
-            sender: "admin",
-            text: "Hello! Your campaign is performing well. I'll send you the latest metrics shortly.",
-            time: "10:32 AM",
-          },
-          {
-            id: 3,
-            sender: "user",
-            text: "Thank you for your help!",
-            time: "10:35 AM",
-          },
-        ];
-  });
-
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const messageEndRef = useRef(null);
 
-  // Listen for updates across tabs
+  //Scroll to bottom after every new message
+  // useEffect(() => {
+  //   messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [messages]);
+
+  // Fetch messages every 2 seconds (real-time)
   useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === storageKey) {
-        const updated = JSON.parse(e.newValue);
-        setMessages(updated);
+    const loadMessages = async () => {
+      try {
+        const data = await fetchChatting();
+        const filterData = data.filter((d) => d.order === orderId);
+        setMessages(filterData);
+      } catch (err) {
+        console.error("Failed to fetch messages", err);
       }
     };
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [storageKey]);
 
-  const handleFileChange = () => {
-    // const file = e.target.files[0];
-    // if (file) {
-    //   onFileSelect(file);
-    //   console.log(file);
-      
-    // }
-  };
+    loadMessages();
+    const interval = setInterval(loadMessages, 2000);
+    return () => clearInterval(interval);
+  }, [orderId]);
 
-  // Send a new message
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
-    const newMsg = {
-      id: Date.now(),
-      sender: currentUser,
-      text: input,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+
+    const payload = {
+      message: input.trim(),
+      order: orderId
     };
 
-    const updated = [...messages, newMsg];
-    setMessages(updated);
-    localStorage.setItem(storageKey, JSON.stringify(updated));
-    setInput("");
+    try {
+      await postChatting(payload);
+      setInput("");
+
+      const data = await fetchChatting();
+      const filterData = data.filter((d) => d.order === orderId);
+      setMessages(filterData);
+    } catch (err) {
+      console.error("Failed to send message", err);
+    }
   };
 
   return (
-    <div className={`bg-white rounded-lg flex flex-col h-[480px] ${divHight}`}>
+    <div className={`bg-white rounded-lg flex flex-col ${divHight}`}>
+
+      {(currentUser === "EMPLOYEE" || currentUser === "ADMIN") && chatUser && (
+        <div className="p-4 border-b bg-blue-50 rounded-t-lg flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-300 text-white rounded-full flex items-center justify-center font-semibold">
+            {chatUser.first_name?.[0]}
+          </div>
+
+          <div>
+            <p className="font-semibold">
+              {chatUser.first_name} {chatUser.last_name}
+            </p>
+            <p className="text-sm text-gray-600">{chatUser.email}</p>
+            <p className="text-xs text-gray-500 capitalize">{chatUser.role?.toLowerCase()}</p>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.sender === currentUser ? "justify-end" : "justify-start"
-            }`}
-          >
+        {messages?.map((msg) => {
+          
+          const sender =
+            msg?.author?.role === "CUSTOMER" ? "CUSTOMER" : "EMPLOYEE";
+
+          return (
             <div
-              className={`max-w-[70%] p-3 rounded-lg ${
-                msg.sender === currentUser
-                  ? "bg-[#0095FF] text-white"
-                  : "bg-[#D7E7FF] text-gray-800"
+              key={msg.id}
+              className={`flex ${
+                sender === currentUser ? "justify-end" : "justify-start"
               }`}
             >
-              <p>{msg.text}</p>
-              <p className="text-xs opacity-70 mt-1">{msg.time}</p>
+              <div
+                className={`max-w-[70%] p-3 rounded-lg ${
+                  sender === currentUser
+                    ? "bg-[#0095FF] text-white"
+                    : "bg-[#D7E7FF] text-gray-800"
+                }`}
+              >
+                <p>{msg?.message}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {new Date(msg?.timestamp).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </p>
+                <p className="text-xs opacity-70 mt-1" >Massage from {msg.author.role.toLowerCase()}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+
+        <div ref={messageEndRef} />
       </div>
 
       {/* Input */}
       <div className="border-t border-gray-300 p-3 flex items-center gap-2">
         <div>
-          <input
-            type="file"
-            id="fileInput"
-            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+          <input type="file" id="fileInput" className="hidden" />
           <label
             htmlFor="fileInput"
-            className="cursor-pointer bg-[#0095FF] hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 transition-all"
+            className="cursor-pointer bg-[#0095FF] hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2"
           >
             <Paperclip size={18} />
-            <span>Attach File</span>
+            <span className="hidden md:block">Attach File</span>
           </label>
         </div>
+
         <input
           type="text"
           value={input}
@@ -125,9 +132,10 @@ export default function ChatBox({
           placeholder="Type your message..."
           className="flex-1 border border-gray-300 rounded px-4 py-2 outline-none"
         />
+
         <button
           onClick={handleSend}
-          className="bg-[#0095FF] hover:bg-blue-600 text-white px-4 py-3 rounded transition-all"
+          className="bg-[#0095FF] hover:bg-blue-600 text-white px-4 py-3 rounded"
         >
           <Send size={18} />
         </button>

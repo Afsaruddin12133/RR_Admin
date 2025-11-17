@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import RegisterFrom from "./RegisterFrom";
 import LoginFrom from "./LoginFrom";
 import ForgetPasswordFrom from "./ForgetPasswordFrom";
 
-export default function AuthModal() {
-  const [mode, setMode] = React.useState("login");
+export default function AuthModal({role}) {
+  const [mode, setMode] = useState("login");
   motion;
   return (
     <motion.div
@@ -50,9 +50,9 @@ export default function AuthModal() {
         </div>
 
         <div>
-          {mode === "register" && <RegisterFrom setMode={setMode} />}
+          {mode === "register" && <RegisterFrom setMode={setMode} role={role} />}
 
-          {mode === "login" && <LoginFrom setMode={setMode} />}
+          {mode === "login" && <LoginFrom setMode={setMode} role={role}  />}
 
           {mode === "forgetPassword" && (
             <ForgetPasswordFrom setMode={setMode} />

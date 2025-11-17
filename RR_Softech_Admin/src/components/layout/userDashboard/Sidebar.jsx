@@ -52,7 +52,7 @@ export default function Sidebar() {
           })}
         </nav>
         <div>
-          <Link to="/change-password"
+          <Link to="/user/change-password"
             className="flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-all"
           >
             <Key size={18} />
@@ -63,7 +63,7 @@ export default function Sidebar() {
               e.preventDefault();
               logout();
               toast.success("Logout Sucessfully");
-              navigate("/");
+              navigate("/user/login");
             }}
             className="flex items-center gap-3 px-8 py-2 rounded-lg text-sm font-medium transition-all mb-16"
           >
