@@ -1,34 +1,41 @@
 import React, { useState } from "react";
-import ServiceSidebar from "./ServiceSidebar";
+import Sidebar from "./Sidebar";
 import ChatBox from "../../../components/common/ChatBox";
 
-
+/**
+ * Messages page for employees/admins.
+ * - Sidebar (WhatsApp-like)
+ * - ChatBox
+ */
 export default function Messages() {
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const handleSelectConversation = ({ user, latestOrder }) => {
+    setSelectedUser(user);
+    setSelectedOrder(latestOrder);
+  };
 
   return (
-    <div className="flex w-full h-[900px] bg-gray-100">
-      
-      {/* LEFT SIDEBAR */}
-      <ServiceSidebar
-        setSelectedOrderId={setSelectedOrderId}
-        setSelectedCustomer={setSelectedCustomer}
-      />
+    <div className="flex  bg-gray-100 h-[80vh]">
+      <div className="hidden md:block w-80 h-[30vh]">
+        <Sidebar onSelectConversation={handleSelectConversation} />
+      </div>
 
-      {/* RIGHT CHAT AREA */}
       <div className="flex-1 p-4">
-        {selectedOrderId ? (
-          <ChatBox
-            currentUser="EMPLOYEE"
-            orderId={selectedOrderId}
-            customer={selectedCustomer}
-            divHight="h-full"
-            chatUser={selectedCustomer}
-          />
+        {selectedOrder ? (
+          <div className="max-w-9xl mx-auto ">
+            <ChatBox
+              currentUser="EMPLOYEE"
+              orderId={selectedOrder}
+              chatUser={selectedUser}
+              divHeight="h-[85vh]"
+              isCustomerView={false}
+            />
+          </div>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            Select a customer to start chatting
+          <div className=" flex items-center justify-center">
+            <div className="text-gray-400">Select a conversation to start chatting</div>
           </div>
         )}
       </div>

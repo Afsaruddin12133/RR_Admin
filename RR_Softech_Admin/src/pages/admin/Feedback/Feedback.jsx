@@ -1,25 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Search, Reply, Archive, Star } from "lucide-react";
 import SearchBar from "../../../components/shared/admin/SearchBar";
-import { fetchReviews } from "../../../api/UserDashboard/reviews";
+import { deleteReview, fetchReviews } from "../../../api/UserDashboard/reviews";
 import Pagination from "../../../components/shared/userDashboard/Pagination";
+import { toast } from "react-toastify";
 
-
+// ----------------------
+// Helper Functions
+// ----------------------
 function getUserName(user) {
   if (!user) return "Unknown User";
-  const name = [user.first_name, user.last_name].filter(Boolean).join(" ");
-  return name || user.email;
+  const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+  return fullName || user.email || "Unknown User";
 }
 
-function getService(user) {
-  return user?.profile?.company_name || "N/A";
+function getService(service) {
+  return service?.name || "Unknown Service";
 }
 
 function getImage(user) {
-  // Placeholder for real avatar if available, otherwise use generated
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-    getUserName(user)
-  )}`; // Adapt if user image available
+  return user?.image || "https://i.pravatar.cc/100?img=12";
 }
 
 function formatDate(dateStr) {
@@ -27,57 +27,65 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString();
 }
 
+// ----------------------
+// MAIN COMPONENT
+// ----------------------
 export default function Feedback() {
   const [search, setSearch] = useState("");
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 5; // Adjust as needed
+  const pageSize = 4;
 
   useEffect(() => {
-    let ignore = false;
-    setLoading(true);
-    fetchReviews({ page: currentPage, page_size: pageSize })
-      .then((res) => {
-        if (ignore) return;
-        setReviews(res.items || res.data || []); // Use res.items for paginated results if provided
-        setTotalPages(res.totalPages || res.total_pages || 1);
-        setError(null);
-      })
-      .catch((e) => setError(e.message || "Failed to load"))
-      .finally(() => setLoading(false));
-    return () => {
-      ignore = true;
-    };
-  }, [currentPage]);
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
 
-  // Filtering for search
-  const filteredData = reviews.filter(
-    (item) => {
-      const name = getUserName(item.user).toLowerCase();
-      const service = getService(item.user).toLowerCase();
-      return (
-        name.includes(search.toLowerCase()) ||
-        service.includes(search.toLowerCase())
-      );
-    }
-  );
+      try {
+        const response = await fetchReviews();
+        setReviews(response?.results || response || []);
+      } catch (err) {
+        setError("Failed to load reviews. Please try again.");
+        console.log(err);
+        
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredData = reviews.filter((item) => {
+    const name = getUserName(item?.user).toLowerCase();
+    const service = getService(item?.service).toLowerCase();
+    return (
+      name.includes(search.toLowerCase()) ||
+      service.includes(search.toLowerCase())
+    );
+  });
+
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedReviews = filteredData.slice(startIndex, startIndex + pageSize);
+  
 
   const handleArchive = async (id) => {
-    await deleteReview(id);
-    setReviews((old) => old.filter((r) => r.id !== id));
+    try {
+      await deleteReview(id);
+      setReviews((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Review Delete Sucessfull")
+    } catch {
+      alert("Failed to archive review.");
+    }
   };
 
   return (
-    <div className="p-6  mx-auto">
+    <div className="p-6 mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">
-          Customer Feedback
-        </h2>
+        <h2 className="text-2xl font-semibold text-gray-800">Customer Feedback</h2>
         <p className="text-gray-500 text-sm">
           Review and respond to client feedback and ratings.
         </p>
@@ -91,15 +99,21 @@ export default function Feedback() {
         className="mb-5"
       />
 
-      {loading ? (
+      {/* Loading & Error States */}
+      {loading && (
         <p className="text-center py-6 text-gray-500">Loading...</p>
-      ) : error ? (
+      )}
+
+      {error && (
         <p className="text-center py-6 text-red-500">{error}</p>
-      ) : (
+      )}
+
+      {/* Content */}
+      {!loading && !error && (
         <>
           <div className="space-y-4">
-            {filteredData.length ? (
-              filteredData.map((item) => (
+            {paginatedReviews.length ? (
+              paginatedReviews.map((item) => (        
                 <div
                   key={item.id}
                   className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition"
@@ -116,8 +130,10 @@ export default function Feedback() {
                           {getUserName(item.user)}
                         </h3>
                         <p className="text-sm text-gray-500">
-                          {getService(item.user)}
+                          {getService(item.service)}
                         </p>
+
+                        {/* Rating */}
                         <div className="flex items-center mt-1">
                           {Array.from({
                             length: Math.max(0, Math.min(5, item.rating)),
@@ -131,18 +147,23 @@ export default function Feedback() {
                         </div>
                       </div>
                     </div>
+
                     <span className="text-xs text-gray-500 mt-2 sm:mt-0">
                       {formatDate(item.created_at)}
                     </span>
                   </div>
+
+                  {/* Comment */}
                   <p className="text-gray-600 text-sm mt-3">{item.comment}</p>
+
+                  {/* Actions */}
                   <div className="flex gap-2 mt-4">
                     <button className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition">
                       <Reply size={15} /> Reply
                     </button>
                     <button
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition"
                       onClick={() => handleArchive(item.id)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition"
                     >
                       <Archive size={15} /> Archive
                     </button>
@@ -155,11 +176,13 @@ export default function Feedback() {
               </p>
             )}
           </div>
+
+          {/* Pagination */}
           <div className="mt-6">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              onPageChange={(page) => setCurrentPage(page)}
             />
           </div>
         </>

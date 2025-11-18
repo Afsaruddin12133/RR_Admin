@@ -1,143 +1,243 @@
-import { Paperclip, Send } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Paperclip, Send, Check } from "lucide-react";
 import { fetchChatting, postChatting } from "../../api/UserDashboard/chatting";
 
 export default function ChatBox({
-  currentUser,
+  currentUser = "CUSTOMER",
   orderId,
-  divHight = "sm:h-[670px]",
-  chatUser = null   
-
+  chatUser = null,
+  divHeight = "h-[670px]",
+  isCustomerView = false,
 }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [lastFetchedAt, setLastFetchedAt] = useState(null);
+  const [sending, setSending] = useState(false);
+
   const messageEndRef = useRef(null);
+  const scrollRef = useRef(null);
 
-  //Scroll to bottom after every new message
-  // useEffect(() => {
-  //   messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [messages]);
+  const scrollToBottom = (smooth = true) => {
+    messageEndRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+    });
+  };
 
-  // Fetch messages every 2 seconds (real-time)
-  useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        const data = await fetchChatting();
-        const filterData = data.filter((d) => d.order === orderId);
-        setMessages(filterData);
-      } catch (err) {
-        console.error("Failed to fetch messages", err);
+  const loadMessages = async (opts = { force: false }) => {
+    if (!orderId) return;
+    try {
+      setLoading(true);
+      const data = await fetchChatting();
+
+      const filterData = data
+        .filter((d) => d && d.order === orderId)
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+      const latest = filterData.length
+        ? filterData[filterData.length - 1].timestamp
+        : null;
+
+      if (!opts.force && lastFetchedAt && latest === lastFetchedAt) {
+        setLoading(false);
+        return;
       }
-    };
 
-    loadMessages();
-    const interval = setInterval(loadMessages, 2000);
+      setMessages(filterData);
+      setLastFetchedAt(latest);
+      setLoading(false);
+
+      setTimeout(() => scrollToBottom(true), 80);
+    } catch (err) {
+      console.error("Chat load failed:", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMessages({ force: true });
+    const interval = setInterval(() => loadMessages(), 2000);
     return () => clearInterval(interval);
   }, [orderId]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !file) return;
+    setSending(true);
 
     const payload = {
-      message: input.trim(),
-      order: orderId
+      message: input.trim() || (file ? file.name : ""),
+      order: orderId,
     };
 
     try {
       await postChatting(payload);
       setInput("");
-
-      const data = await fetchChatting();
-      const filterData = data.filter((d) => d.order === orderId);
-      setMessages(filterData);
+      setFile(null);
+      await loadMessages({ force: true });
     } catch (err) {
-      console.error("Failed to send message", err);
+      console.error("Failed to send message:", err);
+    } finally {
+      setSending(false);
     }
   };
 
-  return (
-    <div className={`bg-white rounded-lg flex flex-col ${divHight}`}>
+  const onFileChange = (e) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setFile(f);
+    }
+  };
 
-      {(currentUser === "EMPLOYEE" || currentUser === "ADMIN") && chatUser && (
-        <div className="p-4 border-b bg-blue-50 rounded-t-lg flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-300 text-white rounded-full flex items-center justify-center font-semibold">
-            {chatUser.first_name?.[0]}
+  const onKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  // ---------- MAIN BUBBLE LOGIC ----------
+  const bubbleSide = (msgRole) => {
+    // if the message is from the currently logged in user
+    const isMine = msgRole === currentUser;
+
+    // mine = right side, others = left side
+    return isMine ? "justify-end" : "justify-start";
+  };
+
+  const bubbleColor = (msgRole) => {
+    // mine = BLUE, others = WHITE
+    const isMine = msgRole === currentUser;
+    return isMine ? "bg-blue-100 text-gray-900" : "bg-white text-gray-900";
+  };
+
+  return (
+    <div
+      className={`flex flex-col bg-white rounded-lg overflow-hidden ${divHeight}`}
+    >
+      {!isCustomerView && chatUser && (
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-300 bg-white">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white"
+            style={{
+              backgroundColor: `hsl(${(chatUser.id * 47) % 360} 60% 50%)`,
+            }}
+          >
+            {chatUser.first_name?.[0] || "U"}
           </div>
 
-          <div>
-            <p className="font-semibold">
+          <div className="flex-1">
+            <div className="font-semibold text-sm">
               {chatUser.first_name} {chatUser.last_name}
-            </p>
-            <p className="text-sm text-gray-600">{chatUser.email}</p>
-            <p className="text-xs text-gray-500 capitalize">{chatUser.role?.toLowerCase()}</p>
+            </div>
+            <div className="text-xs text-gray-500">{chatUser.email}</div>
+          </div>
+
+          <div className="text-xs text-gray-400 capitalize">
+            {chatUser.role?.toLowerCase()}
           </div>
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
-        {messages?.map((msg) => {
-          
-          const sender =
-            msg?.author?.role === "CUSTOMER" ? "CUSTOMER" : "EMPLOYEE";
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-3 sm:p-6"
+      >
+        {loading && messages.length === 0 ? (
+          <div className="text-center text-gray-400 py-8">
+            Loading messages...
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-gray-400 py-8">
+            No messages yet. Say hi 👋
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const role = msg.author?.role || "UNKNOWN";
 
-          return (
-            <div
-              key={msg.id}
-              className={`flex ${
-                sender === currentUser ? "justify-end" : "justify-start"
-              }`}
-            >
-              <div
-                className={`max-w-[70%] p-3 rounded-lg ${
-                  sender === currentUser
-                    ? "bg-[#0095FF] text-white"
-                    : "bg-[#D7E7FF] text-gray-800"
-                }`}
-              >
-                <p>{msg?.message}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(msg?.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit"
-                  })}
-                </p>
-                <p className="text-xs opacity-70 mt-1" >Massage from {msg.author.role.toLowerCase()}</p>
+            const side = bubbleSide(role);
+            const color = bubbleColor(role);
+
+            const time = new Date(msg.timestamp);
+            const formattedTime = time.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return (
+              <div key={msg.id} className={`flex ${side}`}>
+                <div
+                  className={`max-w-[85%] p-3 rounded-2xl shadow-sm ${color}`}
+                >
+                  <div className="text-sm whitespace-pre-wrap">
+                    {msg.message}
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs text-gray-400">
+                      {formattedTime}
+                    </span>
+                    <span className="text-xs text-gray-400">•</span>
+
+                    <span className="text-xs capitalize text-gray-500">
+                      from {role.toLowerCase()}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
 
         <div ref={messageEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-300 p-3 flex items-center gap-2">
-        <div>
-          <input type="file" id="fileInput" className="hidden" />
-          <label
-            htmlFor="fileInput"
-            className="cursor-pointer bg-[#0095FF] hover:bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2"
-          >
-            <Paperclip size={18} />
-            <span className="hidden md:block">Attach File</span>
-          </label>
-        </div>
-
+      <div className="border-t border-gray-300 p-3 bg-white flex items-center gap-3">
         <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          placeholder="Type your message..."
-          className="flex-1 border border-gray-300 rounded px-4 py-2 outline-none"
+          id="fileInputChat"
+          type="file"
+          className="hidden"
+          onChange={onFileChange}
         />
+
+        <label
+          htmlFor="fileInputChat"
+          className="cursor-pointer p-2 rounded hover:bg-gray-100"
+        >
+          <Paperclip size={18} />
+        </label>
+
+        <div className="flex-1">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder="Type a message..."
+            className="w-full resize-none h-10 sm:h-12 rounded border border-gray-200 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-300"
+          />
+
+          {file && (
+            <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+              <div className="truncate max-w-xs">{file.name}</div>
+              <button
+                onClick={() => setFile(null)}
+                className="text-xs text-blue-600 underline"
+                type="button"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={handleSend}
-          className="bg-[#0095FF] hover:bg-blue-600 text-white px-4 py-3 rounded"
+          disabled={sending}
+          className="bg-[#0095FF] hover:bg-blue-600 text-white p-3 rounded flex items-center justify-center"
+          aria-label="Send message"
+          type="button"
         >
-          <Send size={18} />
+          <Send size={16} />
         </button>
       </div>
     </div>
