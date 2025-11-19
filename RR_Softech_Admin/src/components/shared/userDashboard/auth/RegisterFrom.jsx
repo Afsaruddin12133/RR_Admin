@@ -8,9 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function RegisterFrom({ setMode, role }) {
   const navigate = useNavigate();
-  console.log(role);
   
-
   async function handleRegister(values) {
     try {
       const payload = {

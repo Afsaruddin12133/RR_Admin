@@ -36,7 +36,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <AuthModal role="OWNER" />,
+        element: <AuthModal role="CUSTOMER" />,
       },
     ],
   },
