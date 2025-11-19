@@ -1,199 +1,78 @@
-import React, { useState } from "react";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Clock,
-  BriefcaseBusiness,
-  X,
-} from "lucide-react";
+import React from "react";
+import { X, Mail, Phone, User, Building2, ShieldCheck, Calendar } from "lucide-react";
 
-export default function ViewProfile({ open, onClose, user }) {
-  const [permissions, setPermissions] = useState({
-    viewUsers: true,
-    manageUsers: true,
-    viewAnalytics: true,
-  });
-
-  if (!open) return null;
-
-  const toggle = (key) =>
-    setPermissions((prev) => ({ ...prev, [key]: !prev[key] }));
+export default function ViewProfile({ open, onClose, user, onEdit }) {
+  if (!open || !user) return null;
 
   const {
-    name = "John Dove Rock",
-    status = "Active",
-    avatar =
-      "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200",
-    email = "jhon@example.com",
-    phone = "01955656565",
-    location = "Dhaka, Bangladesh",
-    joined = "12 Nov 2025",
-    lastActive = "2024-11-15 16:45",
-    activeProjects = 8,
-    openTickets = 12,
-  } = user || {};
+    email,
+    first_name,
+    last_name,
+    phone_number,
+    company_name,
+    role,
+  } = user;
+
+  const fullName =
+    (first_name || last_name)
+      ? `${first_name || ""} ${last_name || ""}`.trim()
+      : "No Name Provided";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      {/* Dialog */}
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-xl">
-        {/* Close button */}
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl relative animate-fadeIn">
+        
+        {/* Close */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-500 hover:text-black"
         >
-          <X size={20} />
+          <X size={22} />
         </button>
 
         {/* Header */}
-        <div className="flex flex-col items-center pt-8 px-8">
-          <div className="h-20 w-20 rounded-full overflow-hidden border-4 border-white shadow-md">
-            <img
-              src={avatar}
-              alt={name}
-              className="h-full w-full object-cover"
-            />
-          </div>
-          <h2 className="mt-3 text-xl font-semibold text-gray-900">{name}</h2>
-          <span className="mt-2 inline-flex items-center px-4 py-1 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold">
-            {status}
-          </span>
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 rounded-t-2xl">
+          <h1 className="text-2xl font-semibold">{fullName}</h1>
+          <p className="text-sm opacity-90 flex items-center gap-2 mt-1">
+            <ShieldCheck size={16} /> {role}
+          </p>
         </div>
 
-        <div className="mt-6 border-t border-gray-100" />
+        {/* Body */}
+        <div className="p-8 space-y-6">
+          {/* Profile Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* Main content */}
-        <div className="px-8 pb-8 pt-6 space-y-6">
-          {/* Top 2 columns */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Contact info */}
-            <div className="border border-gray-100 rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-gray-700">
-                <Mail size={16} className="text-gray-400" />
-                <span>{email}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-700">
-                <Phone size={16} className="text-gray-400" />
-                <span>{phone}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-700">
-                <MapPin size={16} className="text-gray-400" />
-                <span>{location}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-700">
-                <Calendar size={16} className="text-gray-400" />
-                <span>Joined {joined}</span>
-              </div>
-            </div>
+            <InfoRow icon={<Mail size={18} />} label="Email" value={email} />
+            <InfoRow icon={<Phone size={18} />} label="Phone" value={phone_number || "N/A"} />
+            <InfoRow icon={<User size={18} />} label="First Name" value={first_name || "N/A"} />
+            <InfoRow icon={<User size={18} />} label="Last Name" value={last_name || "N/A"} />
+            <InfoRow icon={<Building2 size={18} />} label="Company" value={company_name || "N/A"} />
 
-            {/* Work activity */}
-            <div className="border border-gray-100 rounded-xl p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-gray-800">
-                Work Activity
-              </h3>
-              <div className="flex items-center gap-3 text-sm text-gray-700">
-                <Clock size={16} className="text-gray-400" />
-                <div>
-                  <div className="font-medium text-gray-800">Last Active</div>
-                  <div className="text-gray-600 text-xs">{lastActive}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-gray-700">
-                <BriefcaseBusiness size={16} className="text-gray-400" />
-                <div>
-                  <div className="font-medium text-gray-800">
-                    Current Workload
-                  </div>
-                  <div className="text-gray-600 text-xs">
-                    {activeProjects} active projects, {openTickets} open tickets
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Role permissions */}
-          <div className="border border-gray-100 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">
-              Role Permissions
-            </h3>
+          {/* Edit Button */}
+          <button
+            onClick={onEdit}
+            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+          >
+            Edit Profile
+          </button>
 
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">View Users</span>
-                <button
-                  type="button"
-                  onClick={() => toggle("viewUsers")}
-                  className={`h-5 w-9 rounded-full flex items-center px-0.5 transition ${
-                    permissions.viewUsers ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`h-4 w-4 bg-white rounded-full shadow-sm transform transition ${
-                      permissions.viewUsers ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">Manage Users</span>
-                <button
-                  type="button"
-                  onClick={() => toggle("manageUsers")}
-                  className={`h-5 w-9 rounded-full flex items-center px-0.5 transition ${
-                    permissions.manageUsers ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`h-4 w-4 bg-white rounded-full shadow-sm transform transition ${
-                      permissions.manageUsers ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700">View Analytics</span>
-                <button
-                  type="button"
-                  onClick={() => toggle("viewAnalytics")}
-                  className={`h-5 w-9 rounded-full flex items-center px-0.5 transition ${
-                    permissions.viewAnalytics ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`h-4 w-4 bg-white rounded-full shadow-sm transform transition ${
-                      permissions.viewAnalytics ? "translate-x-4" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="space-y-3">
-            <button className="w-full py-2.5 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
-              Edit Profile
-            </button>
-
-            <button className="w-full py-2.5 rounded-full bg-white border border-gray-200 text-sm text-gray-800 hover:bg-gray-50 transition">
-              Suspend Employee
-            </button>
-
-            <button className="w-full py-2.5 rounded-full bg-white border border-gray-200 text-sm text-gray-800 hover:bg-gray-50 transition">
-              Reset Password
-            </button>
-
-            <button className="w-full py-2.5 rounded-full bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition">
-              Delete Employee
-            </button>
-          </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* Small reusable row component */
+function InfoRow({ icon, label, value }) {
+  return (
+    <div className="flex flex-col border border-gray-100 p-4 rounded-xl shadow-sm bg-gray-50">
+      <div className="flex items-center gap-2 text-gray-600 text-sm mb-1">
+        {icon} {label}
+      </div>
+      <div className="text-gray-900 font-medium">{value}</div>
     </div>
   );
 }

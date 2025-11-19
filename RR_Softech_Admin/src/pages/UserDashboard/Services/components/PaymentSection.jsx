@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { fetchPaymentProvider } from "../../../../api/UserDashboard/payment";
+import { postIntiPayment } from "../../../../api/UserDashboard/payment";
 
-export default function PaymentSection() {
+export default function PaymentSection({ milestoneId }) {
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
 
   const [inputAmount, setInputAmount] = useState("");
   const [processingFee, setProcessingFee] = useState(0);
   const [finalAmount, setFinalAmount] = useState(0);
+
+  const [paymentUrl, setPaymentUrl] = useState("");
   const [error, setError] = useState("");
 
-  // ============================
+  // ======================================================
   // Fetch Payment Providers
-  // ============================
+  // ======================================================
   useEffect(() => {
     const loadProviders = async () => {
       try {
@@ -26,36 +29,60 @@ export default function PaymentSection() {
     loadProviders();
   }, []);
 
-  // ============================
-  // Auto-calc fees on amount change
-  // ============================
-  useEffect(() => {
-    if (!selectedProvider) return;
+  // ======================================================
+  // Auto-calculation
+  // ======================================================
+  const calculateFees = (value, provider = selectedProvider) => {
+    if (!provider) return;
 
-    if (inputAmount === "" || Number(inputAmount) <= 0) {
-      setProcessingFee(0);
-      setFinalAmount(0);
-      return;
-    }
-
-    calculateFees(Number(inputAmount));
-  }, [inputAmount, selectedProvider]);
-
-  const calculateFees = (value) => {
-    if (!selectedProvider) return;
-
-    const feePercent = Number(selectedProvider.processing_fee_percentage);
+    const feePercent = Number(provider.processing_fee_percentage);
     const fee = (value * feePercent) / 100;
 
     setProcessingFee(fee.toFixed(2));
     setFinalAmount((value + fee).toFixed(2));
   };
 
-  // ============================
-  // Handle Amount Input
-  // ============================
+  // ======================================================
+  // When clicking provider:
+  // 1) Auto-call API
+  // 2) Auto-set amounts
+  // 3) Auto-show breakdown
+  // 4) Auto-enable Pay Now
+  // ======================================================
+  const handleProviderSelect = async (provider) => {
+    setSelectedProvider(provider);
+    setError("");
+
+    try {
+      const payload = {
+        provider_code: provider.provider_name_code,
+      };
+
+      const response = await postIntiPayment(payload, milestoneId);
+      console.log("Initial Payment API Response:", response);
+
+      // 🔥 SET DATA FROM API RESPONSE
+      const apiAmount = response.milestone_amount;
+      const apiFee = response.processing_fee;
+      const apiFinal = response.final_charge_amount;
+
+      setInputAmount(apiAmount);
+      setProcessingFee(apiFee);
+      setFinalAmount(apiFinal);
+      setPaymentUrl(response.payment_url);
+    } catch (err) {
+      console.error("Payment init failed:", err);
+    }
+  };
+
+  // ======================================================
+  // User Editable Input (ONLY when milestoneId is null)
+  // ======================================================
   const handleAmountChange = (e) => {
+    if (milestoneId) return; // 🔒 Input locked if milestone payment
+
     const value = e.target.value;
+
     if (!selectedProvider) {
       setError("Please select a payment provider first.");
       return;
@@ -80,7 +107,24 @@ export default function PaymentSection() {
     } else {
       setError("");
     }
+
+    calculateFees(num);
   };
+
+  // ======================================================
+  // Pay Now → Open new tab
+  // ======================================================
+  const handlePayNow = () => {
+    if (paymentUrl) {
+      window.open(paymentUrl, "_blank");
+    }
+  };
+
+  const isPayNowDisabled =
+    !selectedProvider ||
+    !inputAmount ||
+    Boolean(error) ||
+    Number(inputAmount) <= 0;
 
   return (
     <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col gap-6 shadow-sm">
@@ -89,9 +133,7 @@ export default function PaymentSection() {
         RR-Soft Payment
       </h2>
 
-      {/* ============================ */}
-      {/* Provider Selector */}
-      {/* ============================ */}
+      {/* Provider Selection */}
       <div className="flex flex-col gap-3">
         <label className="text-sm text-gray-600 font-medium">
           Select Payment Provider
@@ -101,11 +143,7 @@ export default function PaymentSection() {
           {providers.map((provider) => (
             <div
               key={provider.id}
-              onClick={() => {
-                setSelectedProvider(provider);
-                setError("");
-                setInputAmount("");
-              }}
+              onClick={() => handleProviderSelect(provider)}
               className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition 
                 ${
                   selectedProvider?.id === provider.id
@@ -130,9 +168,7 @@ export default function PaymentSection() {
         </div>
       </div>
 
-      {/* ============================ */}
       {/* Amount Input */}
-      {/* ============================ */}
       <div className="flex flex-col gap-2">
         <label className="text-sm text-gray-600">Enter Amount</label>
         <input
@@ -145,15 +181,13 @@ export default function PaymentSection() {
               ? `Min ${selectedProvider.min_amount} - Max ${selectedProvider.max_amount}`
               : "Select a provider first"
           }
-          disabled={!selectedProvider}
+          disabled={milestoneId && milestoneId !== null} // 🔒 Auto lock when milestone payment
         />
 
         {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
 
-      {/* ============================ */}
-      {/* Payment Breakdown */}
-      {/* ============================ */}
+      {/* Breakdown */}
       {selectedProvider && (
         <div className="w-full bg-gray-50 p-4 rounded-lg border border-gray-200">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">
@@ -179,21 +213,13 @@ export default function PaymentSection() {
         </div>
       )}
 
-      {/* ============================ */}
       {/* Pay Button */}
-      {/* ============================ */}
       <button
-        disabled={
-          !selectedProvider ||
-          inputAmount === "" ||
-          Boolean(error) ||
-          Number(inputAmount) <= 0
-        }
+        disabled={isPayNowDisabled}
+        onClick={handlePayNow}
         className={`w-full text-center py-3 rounded-lg text-white font-medium transition 
           ${
-            !selectedProvider ||
-            inputAmount === "" ||
-            error
+            isPayNowDisabled
               ? "bg-blue-300 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700"
           }
