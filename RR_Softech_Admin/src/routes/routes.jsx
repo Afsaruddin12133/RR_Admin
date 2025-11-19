@@ -25,6 +25,7 @@ import ApprovalPending from "../pages/admin/ApprovalPending/ApprovalPending";
 import AwaitingPayment from "../pages/UserDashboard/AwaitingPayment/AwaitingPayment";
 import AllServices from "../pages/UserDashboard/AlllServices/AllServices";
 import RoleRedirect from "../components/shared/userDashboard/auth/RoleRedirect";
+import EmployeeMassage from "../pages/employee/Massage/EmployeeMassage";
 
 const router = createBrowserRouter([
   // ============================
@@ -35,7 +36,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <AuthModal role="EMPLOYEE" />,
+        element: <AuthModal role="OWNER" />,
       },
     ],
   },
@@ -84,7 +85,7 @@ const router = createBrowserRouter([
           { path: "services", element: <Services /> },
           { path: "transactions", element: <Transactions /> },
           { path: "analytics", element: <Analytics /> },
-          { path: "messages", element: <Messages /> },
+          { path: "messages", element: <EmployeeMassage /> },
           { path: "feedback", element: <Feedback /> },
         ],
       },
