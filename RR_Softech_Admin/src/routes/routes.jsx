@@ -87,6 +87,7 @@ const router = createBrowserRouter([
           { path: "analytics", element: <Analytics /> },
           { path: "messages", element: <EmployeeMassage /> },
           { path: "feedback", element: <Feedback /> },
+          { path: "change-password", element: <ChangePassword /> },
         ],
       },
     ],
