@@ -1,0 +1,24 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "israil-fakir",
+    "main",
+    "nayon",
+    "origin",
+    "udoy"
+  ],
+  "parent": {
+    "israil-fakir": "main",
+    "main": null,
+    "nayon": "main",
+    "origin": "main",
+    "udoy": "main"
+  },
+  "order": [
+    "main",
+    "israil-fakir",
+    "nayon",
+    "origin",
+    "udoy"
+  ]
+}

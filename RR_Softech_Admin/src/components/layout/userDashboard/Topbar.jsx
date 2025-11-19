@@ -84,7 +84,7 @@ export default function Topbar() {
               <button
                 className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-gray-50"
                 onClick={() => {
-                  navigate("/user/change-password");
+                  navigate("change-password");
                   setOpenProfileMenu(false);
                 }}
               >
