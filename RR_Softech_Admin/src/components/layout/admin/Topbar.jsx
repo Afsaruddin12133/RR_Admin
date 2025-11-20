@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Bell, LogOut, Key, User } from "lucide-react";
+import { Bell, LogOut, Key, User, ClipboardClock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import useAuth from "../../../hooks/UserDashboard/useAuth";
@@ -7,11 +7,14 @@ import { fetchProfileInfo } from "../../../api/UserDashboard/profileInfo";
 
 import ViewProfile from "../../common/ViewProfile";
 import EditProfile from "../../common/EditProfile";
+import BookAvailabilityModal from "../../common/BookAvailabilityModal";
 
 export default function Topbar() {
   const [openProfileMenu, setOpenProfileMenu] = useState(false);
   const [openViewModal, setOpenViewModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openAvailabilityModal, setOpenAvailabilityModal] = useState(false);
+
 
   const [profileFull, setProfileFull] = useState(null);
 
@@ -19,11 +22,6 @@ export default function Topbar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  
-
-  /* ------------------------------
-     Load FULL profile for both view/edit
-  ------------------------------ */
   const loadProfile = async () => {
     try {
       const res = await fetchProfileInfo();
@@ -39,14 +37,11 @@ export default function Topbar() {
   };
 
   const handleAfterEdit = async () => {
-    await loadProfile(); 
+    await loadProfile();
     setOpenEditModal(false);
-    setOpenViewModal(true); 
+    setOpenViewModal(true);
   };
 
-  /* ------------------------------
-     Close dropdown when clicking outside
-  ------------------------------ */
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (
@@ -65,9 +60,6 @@ export default function Topbar() {
     };
   }, [openProfileMenu]);
 
-  /* ------------------------------
-      Logout
-  ------------------------------ */
   const handleLogout = () => {
     logout();
     toast.success("Logout Successfully");
@@ -105,7 +97,6 @@ export default function Topbar() {
             {/* Dropdown */}
             {openProfileMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 shadow-lg rounded-lg py-1 text-sm">
-                
                 {/* View Profile */}
                 <button
                   className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-gray-50"
@@ -116,6 +107,17 @@ export default function Topbar() {
                 >
                   <User size={16} />
                   <span>View Profile</span>
+                </button>
+                {/* View Profile */}
+                <button
+                  className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-gray-50"
+                  onClick={() => {
+                    setOpenAvailabilityModal(true);
+                    setOpenProfileMenu(false);
+                  }}
+                >
+                  <ClipboardClock size={16} />
+                  <span>Book Available Slot</span>
                 </button>
 
                 {/* Change Password */}
@@ -161,6 +163,14 @@ export default function Topbar() {
         onClose={() => setOpenEditModal(false)}
         userId={profileFull?.id}
         onSuccess={handleAfterEdit}
+      />
+
+      <BookAvailabilityModal
+        open={openAvailabilityModal}
+        onClose={() => setOpenAvailabilityModal(false)}
+        onSuccess={() => {
+          setOpenAvailabilityModal(false);
+        }}
       />
     </>
   );

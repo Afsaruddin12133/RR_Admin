@@ -181,7 +181,7 @@ export default function PaymentSection({ milestoneId }) {
               ? `Min ${selectedProvider.min_amount} - Max ${selectedProvider.max_amount}`
               : "Select a provider first"
           }
-          disabled={milestoneId && milestoneId !== null} // 🔒 Auto lock when milestone payment
+          disabled={milestoneId && milestoneId !== null} 
         />
 
         {error && <p className="text-xs text-red-600">{error}</p>}

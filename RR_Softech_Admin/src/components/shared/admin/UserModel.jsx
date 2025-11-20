@@ -31,8 +31,8 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
       if (response.success) {
         toast.success("User registered successfully — awaiting activation.");
 
-        // Refresh parent list (loadUsers())
-        onUserAdded();
+        // Refresh parent list
+        onUserAdded();   // <-- make sure this is loadUsers in parent
 
         // Close modal
         onClose();
@@ -51,7 +51,6 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
     } catch (error) {
       toast.error("Something went wrong.");
       console.log(error);
-      
     } finally {
       setLoading(false);
     }
@@ -75,7 +74,7 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
           Add New User
         </h2>
 
-        {/* Grid Layout for Name */}
+        {/* Name Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="text-sm font-medium">First Name *</label>
@@ -85,6 +84,7 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
               value={userData.first_name}
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded-md mt-1 focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
 
@@ -96,6 +96,7 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
               value={userData.last_name}
               onChange={handleChange}
               className="w-full border px-3 py-2 rounded-md mt-1 focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
         </div>
@@ -109,6 +110,7 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
             value={userData.email}
             onChange={handleChange}
             className="w-full border px-3 py-2 rounded-md mt-1 focus:ring-2 focus:ring-blue-500"
+            required
           />
         </div>
 
@@ -122,11 +124,10 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
             className="w-full border px-3 py-2 rounded-md mt-1 focus:ring-2 focus:ring-blue-500"
           >
             <option value="EMPLOYEE">EMPLOYEE</option>
-            <option value="OWNER">OWNER</option>
+            <option value="CUSTOMER">CUSTOMER</option>
           </select>
         </div>
 
-        {/* Password */}
         <div className="mt-3">
           <label className="text-sm font-medium">Password *</label>
           <input
@@ -138,7 +139,6 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
           />
         </div>
 
-        {/* Submit Button */}
         <button
           onClick={handleSubmit}
           disabled={loading}

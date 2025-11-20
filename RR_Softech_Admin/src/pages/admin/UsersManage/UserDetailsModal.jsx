@@ -18,7 +18,6 @@ const modal = {
 const UserDetailsModal = ({ open, onClose, user, onToggleRole, onDelete }) => {
   const [localUser, setLocalUser] = useState(null);
 motion
-  // FIX — Separated loading states
   const [savingRole, setSavingRole] = useState(false);
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingDelete, setSavingDelete] = useState(false);
@@ -47,9 +46,6 @@ motion
     }
   };
 
-  // -------------------------------
-  //       ACTIVE / INACTIVE
-  // -------------------------------
   const handleActiveToggle = async () => {
     if (!localUser) return;
     const newIsActive = !localUser.is_active;

@@ -22,14 +22,6 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL"); // ALL | ACTIVE | INACTIVE
   const [roleFilter, setRoleFilter] = useState("ALL"); // ALL | EMPLOYEE | CUSTOMER
-
-  // For local add-user form (keeps earlier behaviour)
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    status: "Active",
-  });
-
   const loadUsers = async () => {
     try {
       const data = await fetchAllProfile();
@@ -62,25 +54,6 @@ const UsersManagement = () => {
   useEffect(() => {
     loadUsers();
   }, []);
-
-  const handleAddUser = () => {
-    if (!newUser.name || !newUser.email)
-      return alert("All fields are required");
-    setUsers([
-      ...users,
-      {
-        id: Date.now(),
-        name: newUser.name,
-        email: newUser.email,
-        role: "CUSTOMER",
-        is_active: true,
-        joined: new Date().toISOString().split("T")[0],
-      },
-    ]);
-    setNewUser({ name: "", email: "", status: "Active" });
-    setOpenAddModal(false);
-    toast.success("User added locally (update with your API if needed)");
-  };
 
   // Filtering pipeline
   const filteredUsers = users.filter((user) => {
@@ -297,7 +270,7 @@ const UsersManagement = () => {
       <UserModal
         isOpen={openAddModal}
         onClose={() => setOpenAddModal(false)}
-        onUserAdded={handleAddUser}
+        onUserAdded={loadUsers}
       />
 
       {/* Details Modal */}
