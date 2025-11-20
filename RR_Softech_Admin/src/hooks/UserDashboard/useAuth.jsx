@@ -1,8 +1,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import apiClient, { refreshTokenApi } from "../../api/auth";
-// import { getStoredTokens } from './../../utils/UserDashboard/authUtils/getStoredTokens';
-// import { clearTokens } from './../../utils/UserDashboard/authUtils/clearTokens';
 
 
 

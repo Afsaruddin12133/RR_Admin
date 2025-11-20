@@ -15,7 +15,6 @@ export default function BookConsultancyModal({
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Extract unique employees from appointments
   const uniqueEmployees = [
     ...new Map(
       appointments.map((i) => [i.employee.id, i.employee])

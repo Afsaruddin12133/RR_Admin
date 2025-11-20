@@ -10,7 +10,6 @@ export default function FreeConsultancy() {
   const [availabilities, setAvailabilities] = useState([]);
   const [openModal, setOpenModal] = useState(false);
 
-  // Load existing appointments
   const loadAppointments = async () => {
     try {
       const data = await showAppointments();
@@ -23,7 +22,9 @@ export default function FreeConsultancy() {
   // Load employee availabilities
   const loadAvailabilities = async () => {
     try {
-      const data = await showAvailabilities();
+      const data = await showAvailabilities(); 
+       console.log("print Availablities: ",data);
+      
       setAvailabilities(data);
     } catch (err) {
       console.error("Failed to load availabilities", err);

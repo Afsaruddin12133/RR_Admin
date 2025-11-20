@@ -30,9 +30,11 @@ export default function Model({
       ? tabs.filter((t) => visibleTabs.includes(t.value))
       : tabs;
 
-          const [activeTab, setActiveTab] = useState(
-    effectiveTabs[0]?.value ?? "Chatting"
-  );
+    const [activeTab, setActiveTab] = useState(
+    effectiveTabs[0]?.value ?? "Chatting");
+
+  console.log(effectiveTabs);
+  
 
   const closeModal = () => {
     setSelectedOrder(null);

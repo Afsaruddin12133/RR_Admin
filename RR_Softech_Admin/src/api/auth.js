@@ -28,5 +28,9 @@ export async function changePasswordApi(accessToken, body) {
   });
   return res.data;
 }
+export async function forgotPassword(payload) {
+  const res = await apiClient.post("users/request-reset-password/", payload);
+  return res.data;
+}
 
 export default apiClient;
