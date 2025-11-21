@@ -124,8 +124,8 @@ export default function AdminModel({
 
               {activeTab === "WorkUpdate" && (
                 <AdminWorkUpdate
-                  workUpdate={ordersData.work_updates || []}
                   loading={loading}
+                  productId={ordersData?.id}
                 />
               )}
             </div>

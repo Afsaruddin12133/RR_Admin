@@ -32,7 +32,7 @@ export default function UserModal({ isOpen, onClose, onUserAdded }) {
         toast.success("User registered successfully — awaiting activation.");
 
         // Refresh parent list
-        onUserAdded();   // <-- make sure this is loadUsers in parent
+        onUserAdded();  
 
         // Close modal
         onClose();
