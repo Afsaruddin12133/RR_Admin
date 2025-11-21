@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import RightSideModal from "../UserDashboard/RightSideModal";
 import { fetchOrdersById } from "../../../api/UserDashboard/orders";
 import { getButtonClass } from "../../../utils/UserDashboard/services/getButtonClass";
@@ -15,9 +15,8 @@ export default function AdminModel({
 }) {
   const [ordersData, setOrdersData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedMilestoneId, setSelectedMilestoneId] = useState(null);
 
-  // 🔥 FIX 1: EXACT SAME LOGIC AS WORKING COMPONENT
+  /* ------------------ EFFECTIVE TABS ------------------ */
   const effectiveTabs = useMemo(() => {
     if (Array.isArray(visibleTabs) && visibleTabs.length > 0) {
       return tabs.filter((t) =>
@@ -37,36 +36,33 @@ export default function AdminModel({
     setActiveTab(effectiveTabs[0]?.value ?? "Chatting");
   }, [selectedOrder, effectiveTabs]);
 
-  // Close modal, reset everything
   const closeModal = () => {
     setSelectedOrder(null);
     setOrdersData(null);
-    setSelectedMilestoneId(null);
     setLoading(true);
   };
 
-  // Fetch order details
-  useEffect(() => {
+  const loadOrderDetails = useCallback(async () => {
     if (!selectedOrder?.id) return;
 
-    async function loadOrderDetails() {
-      try {
-        setLoading(true);
-        const data = await fetchOrdersById(selectedOrder.id);
-        setOrdersData(data);
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      const data = await fetchOrdersById(selectedOrder.id);
+      setOrdersData(data);
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+    } finally {
+      setLoading(false);
     }
+  }, [selectedOrder?.id]);
 
+  useEffect(() => {
     loadOrderDetails();
-  }, [selectedOrder]);
+  }, [loadOrderDetails]);
 
-  const handleMilestoneSelect = (id) => {
-    setSelectedMilestoneId(id);
-  };
+  const handleReload = useCallback(() => {
+    loadOrderDetails();
+  }, [loadOrderDetails]);
 
   return (
     <RightSideModal
@@ -119,8 +115,10 @@ export default function AdminModel({
                   setActiveTab={setActiveTab}
                   milestoneData={ordersData.milestones || []}
                   loading={loading}
-                  onSelectMilestone={handleMilestoneSelect}
-                  selectedMilestoneId={selectedMilestoneId}
+                  serLoading={setLoading}
+                  selectedMilestoneId={ordersData?.id}
+                  onReload={handleReload}
+                  //autoReload={false}
                 />
               )}
 

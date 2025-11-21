@@ -8,7 +8,7 @@ import DashboardAnalytices from "../DashboardAnalytices/DashboardAnalytices";
 import EmployeeAnalytices from "../../employee/employeeAnalytices/employeeAnalytices";
 import { showDashboardAnalytics } from "../../../api/admin/dashboardAnalytics";
 import AdminModel from "../../../components/shared/admin/AdminModel";
-import { TAB_CONFIG } from "../../../utils/UserDashboard/services/tabconfig";
+import { TAB_CONFIG_ADMIN } from "../../../utils/admin/TAB_CONFIG_ADMIN";
 
 export default function Dashboard() {
   const [search, setSearch] = useState("");
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const visibleTabs = selectedOrder
-    ? TAB_CONFIG[selectedOrder.status] || []
+    ? TAB_CONFIG_ADMIN[selectedOrder.status] || []
     : [];
 
   const pageSize = 8;
