@@ -48,6 +48,8 @@ export default function useAuth() {
   // attach axios interceptor once
   useEffect(() => {
     const requestInterceptor = apiClient.interceptors.request.use((config) => {
+
+      
       const token = localStorage.getItem(ACCESS_KEY);
       if (token) {
         config.headers = config.headers || {};

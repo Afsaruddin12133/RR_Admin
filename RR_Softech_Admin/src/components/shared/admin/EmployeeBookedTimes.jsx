@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { showAvailabilities } from "../../../api/employee/availabilities";
+import { deleteAvailabilities, showAvailabilities } from "../../../api/employee/availabilities";
 import { Delete } from "lucide-react";
 import { toast } from "react-toastify";
 
-// Convert weekday number to readable text
+
 const weekdayNames = {
   1: "Monday",
   2: "Tuesday",
@@ -26,7 +26,8 @@ const EmployeeBookedTimes = () => {
   useEffect(() => {
     const fetchSlots = async () => {
       try {
-        const response = await showAvailabilities();      
+        const response = await showAvailabilities();
+              
         setSlots(response);
       } catch (error) {
         console.error("Failed to load availabilities:", error);
@@ -37,11 +38,25 @@ const EmployeeBookedTimes = () => {
   }, []);
 
 
-  const handleDelete = ()=>{
+ const handleDelete = async (id) => {
+  console.log(id);
+  
 
-    toast.success("Not Implemented Yat")
+  try {
+    const confirmed = window.confirm("Are you sure you want to delete this?");
+    if (!confirmed) return;
 
+    await deleteAvailabilities(id); 
+
+    setSlots((slots) => slots.filter((item) => item.id !== id));
+
+    toast.success("Availability deleted successfully");
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to delete availability");
   }
+};
+
 
   return (
     <div className="p-6 bg-white shadow rounded-lg">
@@ -70,7 +85,7 @@ const EmployeeBookedTimes = () => {
 
               <button 
               className="px-3 py-1 text-xs rounded-full bg-blue-100 text-blue-700"
-              onClick={handleDelete}
+              onClick={(()=> handleDelete(slot.id))}
               >
                 <Delete size={18}/>
               </button>

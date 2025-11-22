@@ -4,8 +4,22 @@ const BASE_URL = "https://global.genzsoft.top/api/";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  headers: { "Content-Type": "application/json" },
 });
+
+apiClient.interceptors.request.use((config) => {
+  const isFormData = config.data instanceof FormData;
+
+  if (isFormData) {
+    config.headers["Content-Type"] = "multipart/form-data";
+  } else {
+    config.headers["Content-Type"] = "application/json";
+  }
+
+  return config;
+});
+
+
+// ----------- AUTH API FUNCTIONS -----------
 
 export async function registerUser(payload) {
   const res = await apiClient.post("users/register/", payload);
@@ -28,6 +42,7 @@ export async function changePasswordApi(accessToken, body) {
   });
   return res.data;
 }
+
 export async function forgotPassword(payload) {
   const res = await apiClient.post("users/request-reset-password/", payload);
   return res.data;

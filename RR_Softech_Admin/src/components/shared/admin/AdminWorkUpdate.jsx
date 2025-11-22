@@ -10,10 +10,12 @@ export default function AdminWorkUpdate({ productId }) {
     link: "",
     attachment: null,
   });
-  const [loading,setLoading] = useState(false)
+
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
+
     if (name === "attachment") {
       setFormData({ ...formData, attachment: files[0] });
     } else {
@@ -23,37 +25,57 @@ export default function AdminWorkUpdate({ productId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true)
+    setLoading(true);
+
+    if (!productId) {
+      toast.error("Invalid Product ID");
+      setLoading(false);
+      return;
+    }
 
     const payload = new FormData();
     payload.append("order", productId);
     payload.append("title", formData.title);
     payload.append("description", formData.description);
-    payload.append("link", formData.link);
+    payload.append("link", formData.link || "");
+
     if (formData.attachment) {
       payload.append("attachment", formData.attachment);
     }
+
     try {
+      
       await postWorkUpdate(payload);
-      toast.success("Work Update are sucessfully Submitted");
-      setLoading(false)
+      toast.success("Work Update successfully submitted!");
+
+      setLoading(false);
+
+      // ✔ Reset form
+      setFormData({
+        title: "",
+        description: "",
+        link: "",
+        attachment: null,
+      });
+
     } catch (err) {
-      toast.error("Got A Work Update error")
       console.log(err);
+      toast.error("Work Update submission failed!");
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-3xl mx-auto mt-10">
-      <h1 className="text-2xl font-semibold text-gray-800 mb-2">
-        Work Update Submission
-      </h1>
+      <h1 className="text-2xl font-semibold text-gray-800 mb-2">Work Update Submission</h1>
+
       <p className="text-gray-500 text-sm mb-6">
         Submit work progress for order ID:{" "}
         <span className="font-semibold">{productId}</span>
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        
         {/* Title */}
         <div>
           <label className="text-gray-700 font-medium">Title</label>
@@ -100,9 +122,7 @@ export default function AdminWorkUpdate({ productId }) {
 
         {/* Attachment */}
         <div>
-          <label className="text-gray-700 font-medium">
-            Attachment (PDF, DOCX, etc.)
-          </label>
+          <label className="text-gray-700 font-medium">Attachment (PDF, DOCX, etc.)</label>
           <div className="w-full mt-1 p-3 border rounded-lg bg-gray-50 cursor-pointer flex items-center gap-4 hover:bg-gray-100 transition">
             <UploadCloud size={24} className="text-blue-500" />
             <input
@@ -119,9 +139,9 @@ export default function AdminWorkUpdate({ productId }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center disabled:bg-blue-400"
         >
-          {loading ? <Loader2 className="animate-spin mr-2" size={20} /> : null}
+          {loading && <Loader2 className="animate-spin mr-2" size={20} />}
           {loading ? "Submitting..." : "Submit Update"}
         </button>
       </form>
