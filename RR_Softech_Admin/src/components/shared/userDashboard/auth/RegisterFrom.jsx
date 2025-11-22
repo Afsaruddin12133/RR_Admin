@@ -16,15 +16,11 @@ export default function RegisterFrom({ setMode, role }) {
         password: values.password,
         first_name: values.first_name,
         last_name: values.last_name,
-        role: role,
+        role: "ADMIN",
       };
       await registerUser(payload);
       toast.success("Registration successful! Please log in to continue.");
-      if(role=="EMPLOYEE"){
-        navigate("pending")
-      }else{
-        setMode("login");
-      }
+      setMode("login");
     } catch (err) {
       handleApiError(err, "Registration failed. Please try again.");
       throw err;
