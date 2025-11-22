@@ -71,6 +71,7 @@ export default function BookConsultancyModal({
           Book Free Consultancy
         </h2>
 
+<<<<<<< HEAD
         {/* EMPLOYEE FIELD */}
         <div className="mb-5">
           <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -132,6 +133,47 @@ export default function BookConsultancyModal({
             onChange={(e) => setNotes(e.target.value)}
           />
         </div>
+=======
+        {/* Employee */}
+        <label className="block text-sm font-medium mb-1">Select Employee</label>
+        <select
+          className="w-full border rounded-lg border-slate-400 px-3 py-2 mb-4 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
+          value={employee}
+          onChange={(e) => setEmployee(e.target.value)}
+        >
+          <option value="">Select Employee</option>
+          {uniqueEmployees.map((emp) => (
+            <option key={emp.id} value={emp.id}>
+              {emp.first_name} {emp.last_name}
+            </option>
+          ))}
+        </select>
+
+        {/* Time Slot */}
+        <label className="block text-sm font-medium mb-1">Select Available Slot</label>
+        <select
+          className="w-full border border-slate-400 rounded-lg px-3 py-2 mb-4 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
+          value={slot}
+          onChange={(e) => setSlot(e.target.value)}
+        >
+          <option value="">Select Schedule</option>
+          {availabilities.map((s) => (
+            <option key={s.id} value={s.id}>
+              {`Day ${s.weekday} — ${s.start_time.slice(11, 16)} to ${s.end_time.slice(11, 16)}`}
+            </option>
+          ))}
+        </select>
+
+        {/* Notes */}
+        <label className="block text-sm font-medium mb-1">Notes</label>
+        <textarea
+          rows={3}
+          className="w-full border border-slate-400 rounded-lg px-3 py-2 mb-5 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
+          placeholder="Write notes..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+        />
+>>>>>>> 2d9d39d04c472774cc64d91958a582cce3193981
 
         {/* Submit Button */}
         <button
