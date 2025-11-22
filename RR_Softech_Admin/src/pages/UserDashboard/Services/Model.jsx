@@ -33,9 +33,6 @@ export default function Model({
     const [activeTab, setActiveTab] = useState(
     effectiveTabs[0]?.value ?? "Chatting");
 
-  console.log(effectiveTabs);
-  
-
   const closeModal = () => {
     setSelectedOrder(null);
   };
@@ -105,7 +102,7 @@ export default function Model({
                 />
               )}
 
-              {activeTab === "Payment" && <PaymentSection milestoneData={ordersData?.milestones || []} milestoneId={selectedMilestoneId} />}
+              {selectedMilestoneId && activeTab  === "Payment" && <PaymentSection milestoneData={ordersData?.milestones || []} milestoneId={selectedMilestoneId} />}
 
               {activeTab === "Feedback" && (
                 <FeedbackSection productId={ordersData?.id} />

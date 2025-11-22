@@ -60,7 +60,7 @@ export default function Pending() {
         <Model 
         selectedOrder={selectedOrder} 
         setSelectedOrder={setSelectedOrder}
-        visibleTabs={['Chatting', 'Transaction', 'Milestone','Payment','Reviews']}
+        visibleTabs={['Chatting', 'Transaction', 'Milestone','Reviews']}
          />
       )}
     </div>

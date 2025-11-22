@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { fetchPaymentProvider } from "../../../../api/UserDashboard/payment";
-import { postIntiPayment } from "../../../../api/UserDashboard/payment";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  fetchPaymentProvider,
+  postIntiPayment,
+} from "../../../../api/UserDashboard/payment";
 
 export default function PaymentSection({ milestoneId }) {
   const [providers, setProviders] = useState([]);
@@ -12,45 +14,28 @@ export default function PaymentSection({ milestoneId }) {
 
   const [paymentUrl, setPaymentUrl] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // ======================================================
-  // Fetch Payment Providers
+  // Fetch Providers
   // ======================================================
   useEffect(() => {
     const loadProviders = async () => {
       try {
         const response = await fetchPaymentProvider();
         setProviders(response || []);
-      } catch (e) {
-        console.error("Failed to load payment providers", e);
+      } catch (err) {
+        console.error("Failed to load payment providers", err);
       }
     };
-
     loadProviders();
   }, []);
 
   // ======================================================
-  // Auto-calculation
+  // Initialize Payment API (Milestone OR Custom)
   // ======================================================
-  const calculateFees = (value, provider = selectedProvider) => {
-    if (!provider) return;
-
-    const feePercent = Number(provider.processing_fee_percentage);
-    const fee = (value * feePercent) / 100;
-
-    setProcessingFee(fee.toFixed(2));
-    setFinalAmount((value + fee).toFixed(2));
-  };
-
-  // ======================================================
-  // When clicking provider:
-  // 1) Auto-call API
-  // 2) Auto-set amounts
-  // 3) Auto-show breakdown
-  // 4) Auto-enable Pay Now
-  // ======================================================
-  const handleProviderSelect = async (provider) => {
-    setSelectedProvider(provider);
+  const initPayment = async (provider, customAmount = null) => {
+    setLoading(true);
     setError("");
 
     try {
@@ -58,33 +43,59 @@ export default function PaymentSection({ milestoneId }) {
         provider_code: provider.provider_name_code,
       };
 
+      if (customAmount !== null) {
+        payload.custom_amount = customAmount;
+      }
+
       const response = await postIntiPayment(payload, milestoneId);
-      console.log("Initial Payment API Response:", response);
 
-      // 🔥 SET DATA FROM API RESPONSE
-      const apiAmount = response.milestone_amount;
-      const apiFee = response.processing_fee;
-      const apiFinal = response.final_charge_amount;
-
-      setInputAmount(apiAmount);
-      setProcessingFee(apiFee);
-      setFinalAmount(apiFinal);
+      setInputAmount(response.milestone_amount ?? customAmount);
+      setProcessingFee(response.processing_fee);
+      setFinalAmount(response.final_charge_amount);
       setPaymentUrl(response.payment_url);
     } catch (err) {
       console.error("Payment init failed:", err);
+      setError("Unable to initialize payment. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   // ======================================================
-  // User Editable Input (ONLY when milestoneId is null)
+  // Provider Selection Logic
   // ======================================================
-  const handleAmountChange = (e) => {
-    if (milestoneId) return; // 🔒 Input locked if milestone payment
+  const handleProviderSelect = async (provider) => {
+    setSelectedProvider(provider);
+    setError("");
 
+    if (!inputAmount && milestoneId) {
+      await initPayment(provider);
+    } else if (inputAmount) {
+      const num = Number(inputAmount);
+
+      if (num < provider.min_amount) {
+        return setError(`Minimum amount is $${provider.min_amount}`);
+      }
+      if (num > provider.max_amount) {
+        return setError(`Maximum amount is $${provider.max_amount}`);
+      }
+
+      console.log(num);
+
+      await initPayment(provider, num);
+    }
+  };
+
+  // ======================================================
+  // Amount Change Logic (For Custom Payments Only)
+  // ======================================================
+  const debounceRef = useRef(null);
+
+  const handleAmountChange = (e) => {
     const value = e.target.value;
 
     if (!selectedProvider) {
-      setError("Please select a payment provider first.");
+      setError("Select a payment provider first.");
       return;
     }
 
@@ -97,42 +108,39 @@ export default function PaymentSection({ milestoneId }) {
     const num = Number(value);
     setInputAmount(num);
 
-    const min = Number(selectedProvider.min_amount);
-    const max = Number(selectedProvider.max_amount);
-
-    if (num < min) {
-      setError(`Minimum amount is $${min}`);
-    } else if (num > max) {
-      setError(`Maximum amount is $${max}`);
-    } else {
-      setError("");
+    if (num < selectedProvider.min_amount) {
+      setError(`Minimum amount is $${selectedProvider.min_amount}`);
+      return;
+    }
+    if (num > selectedProvider.max_amount) {
+      setError(`Maximum amount is $${selectedProvider.max_amount}`);
+      return;
     }
 
-    calculateFees(num);
-  };
+    setError("");
 
-  // ======================================================
-  // Pay Now → Open new tab
-  // ======================================================
-  const handlePayNow = () => {
-    if (paymentUrl) {
-      window.open(paymentUrl, "_blank");
-    }
+    console.log(num);
+    
+
+    // Clear previous timer (user is still typing)
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    // Start a new timer
+    debounceRef.current = setTimeout(() => {
+      console.log("User finished typing, now calling API...");
+      initPayment(selectedProvider, num.toString()); 
+    }, 600); // 600ms debounce
   };
 
   const isPayNowDisabled =
     !selectedProvider ||
     !inputAmount ||
     Boolean(error) ||
+    loading ||
     Number(inputAmount) <= 0;
 
   return (
     <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col gap-6 shadow-sm">
-
-      <h2 className="text-center text-xl font-semibold text-gray-800">
-        RR-Soft Payment
-      </h2>
-
       {/* Provider Selection */}
       <div className="flex flex-col gap-3">
         <label className="text-sm text-gray-600 font-medium">
@@ -145,12 +153,12 @@ export default function PaymentSection({ milestoneId }) {
               key={provider.id}
               onClick={() => handleProviderSelect(provider)}
               className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition 
-                ${
-                  selectedProvider?.id === provider.id
-                    ? "border-blue-600 bg-blue-50"
-                    : "border-gray-300 hover:bg-gray-50"
-                }
-              `}
+                  ${
+                    selectedProvider?.id === provider.id
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-300 hover:bg-gray-50"
+                  }
+                `}
             >
               <img
                 src={provider.logo}
@@ -168,12 +176,14 @@ export default function PaymentSection({ milestoneId }) {
         </div>
       </div>
 
-      {/* Amount Input */}
+      {/* Amount Input (disabled for milestone payments) */}
       <div className="flex flex-col gap-2">
         <label className="text-sm text-gray-600">Enter Amount</label>
         <input
           type="number"
-          className="border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+          className={`border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none ${
+            milestoneId ? "bg-gray-100" : ""
+          }`}
           value={inputAmount}
           onChange={handleAmountChange}
           placeholder={
@@ -181,14 +191,13 @@ export default function PaymentSection({ milestoneId }) {
               ? `Min ${selectedProvider.min_amount} - Max ${selectedProvider.max_amount}`
               : "Select a provider first"
           }
-          disabled={milestoneId && milestoneId !== null} 
         />
 
         {error && <p className="text-xs text-red-600">{error}</p>}
       </div>
 
       {/* Breakdown */}
-      {selectedProvider && (
+      {selectedProvider && inputAmount > 0 && (
         <div className="w-full bg-gray-50 p-4 rounded-lg border border-gray-200">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">
             Payment Breakdown
@@ -196,7 +205,7 @@ export default function PaymentSection({ milestoneId }) {
 
           <div className="flex justify-between text-sm mb-2">
             <span className="text-gray-600">Main Amount</span>
-            <span className="font-medium text-gray-900">${inputAmount || 0}</span>
+            <span className="font-medium text-gray-900">${inputAmount}</span>
           </div>
 
           <div className="flex justify-between text-sm mb-2">
@@ -213,19 +222,19 @@ export default function PaymentSection({ milestoneId }) {
         </div>
       )}
 
-      {/* Pay Button */}
+      {/* Pay Now Button */}
       <button
         disabled={isPayNowDisabled}
-        onClick={handlePayNow}
+        onClick={() => paymentUrl && window.open(paymentUrl, "_blank")}
         className={`w-full text-center py-3 rounded-lg text-white font-medium transition 
-          ${
-            isPayNowDisabled
-              ? "bg-blue-300 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-          }
-        `}
+            ${
+              isPayNowDisabled
+                ? "bg-blue-300 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }
+          `}
       >
-        Pay Now
+        {loading ? "Processing..." : "Pay Now"}
       </button>
     </div>
   );
