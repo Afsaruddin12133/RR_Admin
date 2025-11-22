@@ -69,7 +69,7 @@ export default function BookConsultancyModal({
         {/* Employee */}
         <label className="block text-sm font-medium mb-1">Select Employee</label>
         <select
-          className="w-full border rounded-lg px-3 py-2 mb-4 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg border-slate-400 px-3 py-2 mb-4 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
           value={employee}
           onChange={(e) => setEmployee(e.target.value)}
         >
@@ -84,7 +84,7 @@ export default function BookConsultancyModal({
         {/* Time Slot */}
         <label className="block text-sm font-medium mb-1">Select Available Slot</label>
         <select
-          className="w-full border rounded-lg px-3 py-2 mb-4 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-slate-400 rounded-lg px-3 py-2 mb-4 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
           value={slot}
           onChange={(e) => setSlot(e.target.value)}
         >
@@ -100,7 +100,7 @@ export default function BookConsultancyModal({
         <label className="block text-sm font-medium mb-1">Notes</label>
         <textarea
           rows={3}
-          className="w-full border rounded-lg px-3 py-2 mb-5 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-slate-400 rounded-lg px-3 py-2 mb-5 bg-white shadow-sm focus:ring-2 focus:ring-blue-500"
           placeholder="Write notes..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

@@ -83,7 +83,7 @@ export default function OrdersList() {
       <div
         className={
           viewMode === "grid"
-            ? "grid grid-cols-1 min-[768px]:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 justify-items-center gap-8"
+            ? "grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8"
             : "flex flex-col gap-4"
         }
       >
@@ -92,6 +92,7 @@ export default function OrdersList() {
             <div key={order.id} className={viewMode === "list" ? "w-full" : ""}>
               <OrderCard
                 order={order}
+                viewMode={viewMode}
                 onViewDetails={() => handleViewDetails(order)}
               />
             </div>
