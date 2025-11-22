@@ -15,6 +15,7 @@ export default function BookAvailabilityModal({ open, onClose, onSuccess }) {
   const convertToApiTime = (timeString) => {
     return `${timeString}:00.000Z`;
   };
+  
 
   const handleSubmit = async () => {
     if (!weekday || !start || !end) {

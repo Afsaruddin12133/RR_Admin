@@ -8,6 +8,10 @@ export async function showAvailabilities() {
   const res = await apiClient.get("availabilities/");
   return res.data;
 }
+export async function showAvailabilitiesID(id) {
+  const res = await apiClient.get(`availabilities/${id}`);
+  return res.data;
+}
 
 export async function editMeetingLink(id,payload) {
   const res = await apiClient.post(`appointments/${id}/confirm_and_send_link/`,payload);
