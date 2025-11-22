@@ -4,10 +4,8 @@ import { registerUser } from "../../../../api/auth";
 import CommonForm from "../../../common/CommonForm";
 import { handleApiError } from "../../../../utils/UserDashboard/services/handleApiError";
 import { registerFields } from "../../../../utils/UserDashboard/services/registerFields";
-import { useNavigate } from "react-router-dom";
 
-export default function RegisterFrom({ setMode, role }) {
-  const navigate = useNavigate();
+export default function RegisterFrom({ setMode }) {
   
   async function handleRegister(values) {
     try {
@@ -19,6 +17,7 @@ export default function RegisterFrom({ setMode, role }) {
         role: "ADMIN",
       };
       await registerUser(payload);
+      setMode('login')
       toast.success("Registration successful! Please log in to continue.");
       setMode("login");
     } catch (err) {

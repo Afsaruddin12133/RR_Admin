@@ -118,8 +118,6 @@ export default function PaymentSection({ milestoneId }) {
     }
 
     setError("");
-
-    console.log(num);
     
 
     // Clear previous timer (user is still typing)
@@ -128,8 +126,10 @@ export default function PaymentSection({ milestoneId }) {
     // Start a new timer
     debounceRef.current = setTimeout(() => {
       console.log("User finished typing, now calling API...");
+      console.log(num);
+      
       initPayment(selectedProvider, num.toString()); 
-    }, 600); // 600ms debounce
+    }, 3000); // 600ms debounce
   };
 
   const isPayNowDisabled =
