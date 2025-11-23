@@ -60,7 +60,7 @@ export default function ConsultancyRequestAdmin() {
 
   return (
     <div className="p-6">
-      <h2 className="text-3xl font-bold mb-6 text-center text-slate-900">
+      <h2 className="text-3xl font-bold mb-6 text-left text-slate-900">
         Consultancy Requests
       </h2>
 
