@@ -15,11 +15,13 @@ export default function LoginFrom({ setMode }) {
     try {
       const { email, password } = values;
       const tokenObj = await loginUser({ email, password });
+      
       setAuthState({
         access: tokenObj.access,
         refresh: tokenObj.refresh,
         user: tokenObj.user.email,
         role:tokenObj.user.role,
+        userID: tokenObj.user.id,
       });
       toast.success("Logged in successfully");
       if(tokenObj.user.role === "CUSTOMER"){

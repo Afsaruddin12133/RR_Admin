@@ -1,18 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { deleteAvailabilities, showAvailabilities } from "../../../api/employee/availabilities";
 import { Delete } from "lucide-react";
 import { toast } from "react-toastify";
-
-
-const weekdayNames = {
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  0: "Sunday",
-};
+import { deleteAvailabilities, showAvailabilities } from "../../../api/employee/availabilities";
+import { getStoredTokens } from "../../../hooks/UserDashboard/useAuth";
+import { weekdayNames } from "../../../utils/weekdayNames";
 
 const formatTime = (timeStr) => {
   if (!timeStr) return "";
@@ -22,13 +13,16 @@ const formatTime = (timeStr) => {
 
 const EmployeeBookedTimes = () => {
   const [slots, setSlots] = useState([]);
+  const {userID} = getStoredTokens()
 
   useEffect(() => {
     const fetchSlots = async () => {
       try {
         const response = await showAvailabilities();
-              
-        setSlots(response);
+        const filterData = response.filter((item) => item.employee === userID);
+        console.log(filterData);
+        
+        setSlots(filterData);
       } catch (error) {
         console.error("Failed to load availabilities:", error);
       }
@@ -39,9 +33,7 @@ const EmployeeBookedTimes = () => {
 
 
  const handleDelete = async (id) => {
-  console.log(id);
   
-
   try {
     const confirmed = window.confirm("Are you sure you want to delete this?");
     if (!confirmed) return;

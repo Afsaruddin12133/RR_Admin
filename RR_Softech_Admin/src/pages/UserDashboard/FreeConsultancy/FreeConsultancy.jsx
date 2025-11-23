@@ -3,18 +3,18 @@ import { showAppointments } from "../../../api/UserDashboard/appointments";
 import { showAvailabilities } from "../../../api/employee/availabilities";
 import AppointmentList from "./AppointmentList";
 import BookConsultancyModal from "./BookConsultancyModal";
-
+import { fetchEmployees } from "../../../api/UserDashboard/employee";
 
 export default function FreeConsultancy() {
   const [appointments, setAppointments] = useState([]);
   const [availabilities, setAvailabilities] = useState([]);
   const [openModal, setOpenModal] = useState(false);
+    const [employeeList,setEmployeeList] = useState([])
 
   const loadAppointments = async () => {
     try {
       const data = await showAppointments();
       setAppointments(data);
-      
     } catch (error) {
       console.error("Failed to load appointments", error);
     }
@@ -23,10 +23,17 @@ export default function FreeConsultancy() {
   // Load employee availabilities
   const loadAvailabilities = async () => {
     try {
-      const data = await showAvailabilities(); 
-       console.log("print Availablities: ",data);
-      
+      const data = await showAvailabilities();
       setAvailabilities(data);
+    } catch (err) {
+      console.error("Failed to load availabilities", err);
+    }
+  };
+
+  const loadEmployees = async () => {
+    try {
+      const data = await fetchEmployees();
+      setEmployeeList(data);
     } catch (err) {
       console.error("Failed to load availabilities", err);
     }
@@ -35,6 +42,7 @@ export default function FreeConsultancy() {
   useEffect(() => {
     loadAppointments();
     loadAvailabilities();
+    loadEmployees();
   }, []);
 
   return (
@@ -61,6 +69,7 @@ export default function FreeConsultancy() {
         <BookConsultancyModal
           appointments={appointments}
           availabilities={availabilities}
+          employeeList = {employeeList}
           onClose={() => setOpenModal(false)}
           onSuccess={loadAppointments}
         />
