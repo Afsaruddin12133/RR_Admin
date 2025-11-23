@@ -199,7 +199,7 @@ export default function PaymentProviderModal({
                                 name="type"
                                 value={form.type || ""}
                                 onChange={handleChange}
-                                placeholder={isManual ? "BANK" : "CRYPTO"}
+                                placeholder={isManual ? "BANK_TRANSFER" : "CRYPTO"}
                             />
 
                             <div className="mt-4 md:mt-6">
