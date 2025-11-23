@@ -3,7 +3,7 @@ import { showAppointments } from "../../../api/UserDashboard/appointments";
 import { showAvailabilities } from "../../../api/employee/availabilities";
 import AppointmentList from "./AppointmentList";
 import BookConsultancyModal from "./BookConsultancyModal";
-import { fetchEmployee } from "../../../api/UserDashboard/employee";
+import { fetchEmployees } from "../../../api/UserDashboard/employee";
 
 export default function FreeConsultancy() {
   const [appointments, setAppointments] = useState([]);
@@ -32,7 +32,7 @@ export default function FreeConsultancy() {
 
   const loadEmployees = async () => {
     try {
-      const data = await fetchEmployee();
+      const data = await fetchEmployees();
       setEmployeeList(data);
     } catch (err) {
       console.error("Failed to load availabilities", err);
