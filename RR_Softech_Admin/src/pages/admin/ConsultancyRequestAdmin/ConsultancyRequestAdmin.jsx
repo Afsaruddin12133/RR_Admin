@@ -65,7 +65,7 @@ export default function ConsultancyRequestAdmin() {
       </h2>
 
       {/* CARD GRID */}
-      <div className="grid grid-cols-1 930:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 mdx:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {paginatedItems.map((item) => {
           const { strip, chip, timeBg } = getStatusStyles(item.status);
           const hasMeetingLink = !!item.meeting_link;
@@ -83,9 +83,9 @@ export default function ConsultancyRequestAdmin() {
             >
               <div
                 className="relative bg-white rounded-2xl border border-slate-200
-                           shadow-[0_8px_24px_rgba(148,163,184,0.20)]
-                           hover:shadow-[0_14px_32px_rgba(148,163,184,0.28)]
-                           transition-all duration-200 overflow-hidden"
+                            shadow-[0_8px_24px_rgba(148,163,184,0.20)]
+                            hover:shadow-[0_14px_32px_rgba(148,163,184,0.28)]
+                            transition-all duration-200 overflow-hidden"
               >
                 {/* left colored strip */}
                 <div className={`absolute inset-y-0 left-0 w-[4px] ${strip}`} />

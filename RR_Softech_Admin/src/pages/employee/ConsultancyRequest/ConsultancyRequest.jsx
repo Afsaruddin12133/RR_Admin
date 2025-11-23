@@ -73,7 +73,7 @@ export default function ConsultancyRequest() {
       </h2>
 
       {/* CARD GRID */}
-      <div className="grid grid-cols-1 930:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 mdx:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {paginatedItems.map((item) => {
           const { strip, chip, timeBg } = getStatusStyles(item.status);
           const hasMeetingLink = !!item.meeting_link;
