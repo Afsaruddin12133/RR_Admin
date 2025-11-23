@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 
-function TextField({ label, name, type = "text", ...props }) {
+function TextField({ label, name, type = "text", required = false, ...props }) {
     return (
         <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-700">{label}</span>
+            <span className="mb-1 flex items-center gap-1 font-medium text-slate-700">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+            </span>
             <input
                 name={name}
                 type={type}
+                required={required}
                 {...props}
                 className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
             />
@@ -14,12 +18,43 @@ function TextField({ label, name, type = "text", ...props }) {
     );
 }
 
-function TextAreaField({ label, name, ...props }) {
+function SelectField({ label, name, options = [], required = false, ...props }) {
     return (
         <label className="block text-sm">
-            <span className="mb-1 block font-medium text-slate-700">{label}</span>
+            <span className="mb-1 flex items-center gap-1 font-medium text-slate-700">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+            </span>
+
+            <select
+                name={name}
+                required={required}
+                {...props}
+                className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none 
+                           focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
+            >
+                <option value="">Select {label.toLowerCase()}</option>
+                {options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                    </option>
+                ))}
+            </select>
+        </label>
+    );
+}
+
+
+function TextAreaField({ label, name, required = false, ...props }) {
+    return (
+        <label className="block text-sm">
+            <span className="mb-1 flex items-center gap-1 font-medium text-slate-700">
+                {label}
+                {required && <span className="text-red-500">*</span>}
+            </span>
             <textarea
                 name={name}
+                required={required}
                 {...props}
                 className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500"
             />
@@ -83,8 +118,8 @@ export default function PaymentProviderModal({
     };
 
     return (
-        <div className="fixed inset-0 z-40 flex items-center justify-center  backdrop-blur-xs bg-slate-900/40 p-4">
-            <div className="flex w-full max-w-2xl max-h-[90vh]  flex-col rounded-2xl bg-white shadow-lg">
+        <div className="fixed inset-0 z-40 flex items-center justify-center backdrop-blur-xs bg-slate-900/40 p-4">
+            <div className="flex w-full max-w-2xl max-h-[90vh] flex-col rounded-2xl bg-white shadow-lg">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-300 px-5 py-3">
                     <h3 className="text-lg font-semibold text-slate-900">{titleText}</h3>
@@ -103,6 +138,7 @@ export default function PaymentProviderModal({
                     className="flex flex-1 flex-col overflow-y-auto no-scrollbar"
                 >
                     <div className="space-y-4 px-5 py-4">
+                        {/* Title + Provider code */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <TextField
                                 label="Title"
@@ -110,6 +146,7 @@ export default function PaymentProviderModal({
                                 value={form.title || ""}
                                 onChange={handleChange}
                                 required
+                                placeholder={isManual ? "Manual or Banking" : "Riskpay"}
                             />
                             <TextField
                                 label="Provider code"
@@ -117,17 +154,22 @@ export default function PaymentProviderModal({
                                 value={form.provider_name_code || ""}
                                 onChange={handleChange}
                                 required
+                                placeholder={isManual ? "bank" : "riskpay"}
                             />
                         </div>
 
+
+                        {/* Logo + account number (manual only) */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <label className="block text-sm">
-                                <span className="mb-1 block font-medium text-slate-700">
+                                <span className="mb-1 flex items-center gap-1 font-medium text-slate-700">
                                     Logo (image file)
+                                    <span className="text-red-500">*</span>
                                 </span>
                                 <input
                                     type="file"
                                     accept="image/*"
+                                    required={!form.id} // required on create; optional on edit
                                     onChange={(e) => {
                                         const file = e.target.files?.[0] || null;
                                         setForm((prev) => ({ ...prev, logo: file }));
@@ -136,17 +178,20 @@ export default function PaymentProviderModal({
                                 />
                             </label>
 
-
                             {isManual && (
                                 <TextField
                                     label="Account number"
                                     name="account_number"
                                     value={form.account_number || ""}
                                     onChange={handleChange}
+                                    required
+                                    placeholder="e.g. 1738992592394"
                                 />
                             )}
+
                         </div>
 
+                        {/* Description */}
                         <TextAreaField
                             label="Description"
                             name="description"
@@ -155,6 +200,7 @@ export default function PaymentProviderModal({
                             onChange={handleChange}
                         />
 
+                        {/* Bank details only for manual */}
                         {isManual && (
                             <TextAreaField
                                 label="Bank details (for manual / banking)"
@@ -165,7 +211,7 @@ export default function PaymentProviderModal({
                             />
                         )}
 
-
+                        {/* Fee + min/max amounts */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <TextField
                                 label="Processing fee percentage"
@@ -174,6 +220,8 @@ export default function PaymentProviderModal({
                                 step="0.01"
                                 value={form.processing_fee_percentage || ""}
                                 onChange={handleChange}
+                                required
+                                placeholder="e.g. 0.50"
                             />
                             <TextField
                                 label="Minimum amount"
@@ -182,6 +230,8 @@ export default function PaymentProviderModal({
                                 step="0.01"
                                 value={form.min_amount || ""}
                                 onChange={handleChange}
+                                required
+                                placeholder="e.g. 1000"
                             />
                             <TextField
                                 label="Maximum amount"
@@ -190,17 +240,31 @@ export default function PaymentProviderModal({
                                 step="0.01"
                                 value={form.max_amount || ""}
                                 onChange={handleChange}
+                                required
+                                placeholder="e.g. 500000"
                             />
                         </div>
 
+
+                        {/* Type + active toggle */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <TextField
+                            <SelectField
                                 label="Type"
                                 name="type"
                                 value={form.type || ""}
                                 onChange={handleChange}
-                                placeholder={isManual ? "BANK_TRANSFER" : "CRYPTO"}
+                                required
+                                options={
+                                    isManual
+                                        ? [
+                                            { value: "BANK_TRANSFER", label: "Bank Transfer" },
+                                        ]
+                                        : [
+                                            { value: "CRYPTO", label: "Crypto" },
+                                        ]
+                                }
                             />
+
 
                             <div className="mt-4 md:mt-6">
                                 <SwitchField
