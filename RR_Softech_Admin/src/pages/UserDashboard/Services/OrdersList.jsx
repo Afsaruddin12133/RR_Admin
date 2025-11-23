@@ -57,22 +57,20 @@ export default function OrdersList() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setViewMode("grid")}
-            className={`p-2 rounded-lg border transition ${
-              viewMode === "grid"
+            className={`p-2 rounded-lg border transition ${viewMode === "grid"
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white text-gray-600 border-gray-300"
-            }`}
+              }`}
           >
             <Grid3X3 size={18} />
           </button>
 
           <button
             onClick={() => setViewMode("list")}
-            className={`p-2 rounded-lg border transition ${
-              viewMode === "list"
+            className={`p-2 rounded-lg border transition ${viewMode === "list"
                 ? "bg-blue-600 text-white border-blue-600"
                 : "bg-white text-gray-600 border-gray-300"
-            }`}
+              }`}
           >
             <List size={18} />
           </button>
@@ -127,3 +125,7 @@ export default function OrdersList() {
     </div>
   );
 }
+
+
+
+

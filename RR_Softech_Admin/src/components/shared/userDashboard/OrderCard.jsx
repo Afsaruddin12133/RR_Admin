@@ -5,18 +5,73 @@ import {
   Eye,
   Smartphone,
   MonitorSmartphone,
-  Globe2,
+  LayoutTemplate,
+  Search,
+  MousePointerClick,
+  Share2,
+  PenTool,
 } from "lucide-react";
 import { statusColors } from "../../../utils/UserDashboard/services/statusColors";
 
 function getOrderIcon(planDetails = "") {
   const text = (planDetails || "").toLowerCase();
 
-  if (text.includes("android") || text.includes("mobile")) return Smartphone;
-  if (text.includes("web")) return Globe2;
-  if (text.includes("desktop") || text.includes("software"))
-    return MonitorSmartphone;
+  // Android / mobile apps
+  if (text.includes("android") || text.includes("mobile")) {
+    return Smartphone;
+  }
 
+  // Web design / web development / website
+  if (
+    text.includes("web design") ||
+    text.includes("web development") ||
+    text.includes("website") ||
+    text.includes("web")
+  ) {
+    return LayoutTemplate;
+  }
+
+  // SEO packages
+  if (text.includes("seo")) {
+    return Search;
+  }
+
+  // PPC / paid ads
+  if (
+    text.includes("ppc") ||
+    text.includes("google ads") ||
+    text.includes("adwords") ||
+    text.includes("paid ads")
+  ) {
+    return MousePointerClick;
+  }
+
+  // Social media marketing
+  if (
+    text.includes("social media") ||
+    text.includes("facebook") ||
+    text.includes("instagram") ||
+    text.includes("linkedin")
+  ) {
+    return Share2;
+  }
+
+  // Content and graphics
+  if (
+    text.includes("content") ||
+    text.includes("graphics") ||
+    text.includes("copywriting") ||
+    text.includes("design")
+  ) {
+    return PenTool;
+  }
+
+  // Desktop / software
+  if (text.includes("desktop") || text.includes("software")) {
+    return MonitorSmartphone;
+  }
+
+  // Fallback
   return FileText;
 }
 
@@ -79,7 +134,7 @@ export default function OrderCard({
             </div>
           </div>
         ) : (
-          /* ========== GRID VIEW (unchanged) ========== */
+          /* ========== GRID VIEW ========== */
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3.5 flex-1 basis-24">
               <div className="p-2.5 rounded-lg bg-blue-50 mt-0.5">

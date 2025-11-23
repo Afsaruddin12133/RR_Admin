@@ -40,7 +40,7 @@ export default function AllServices() {
 
   return (
     <section className="w-full py-8 sm:py-10 lg:py-12">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <header className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-600 mb-2">
