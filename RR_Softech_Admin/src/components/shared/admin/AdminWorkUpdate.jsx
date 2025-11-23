@@ -66,13 +66,8 @@ export default function AdminWorkUpdate({ productId }) {
   };
 
   return (
-    <div className="w-full bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-3xl mx-auto mt-10">
+    <div className="w-full bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-6xl mx-auto mt-10">
       <h1 className="text-2xl font-semibold text-gray-800 mb-2">Work Update Submission</h1>
-
-      <p className="text-gray-500 text-sm mb-6">
-        Submit work progress for order ID:{" "}
-        <span className="font-semibold">{productId}</span>
-      </p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         

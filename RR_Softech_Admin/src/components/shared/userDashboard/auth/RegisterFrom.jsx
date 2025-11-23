@@ -14,7 +14,7 @@ export default function RegisterFrom({ setMode }) {
         password: values.password,
         first_name: values.first_name,
         last_name: values.last_name,
-        role: "ADMIN",
+        role: "CUSTOMER",
       };
       await registerUser(payload);
       setMode('login')

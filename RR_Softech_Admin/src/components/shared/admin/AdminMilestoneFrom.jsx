@@ -71,7 +71,7 @@ export default function AdminMilestoneFrom({ selectedMilestoneId, onReload,autoR
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-4xl mx-auto bg-white shadow-sm rounded-2xl p-6 md:p-8"
+      className="w-full max-w-6xl mx-auto bg-white shadow-sm rounded-2xl p-6 md:p-8 mb-8"
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}

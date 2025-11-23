@@ -29,6 +29,7 @@ import EmployeeMassage from "../pages/employee/Massage/EmployeeMassage";
 import PaymentSuccess from "../pages/UserDashboard/PaymentSuccess/PaymentSuccess";
 import ConsultancyRequest from "../pages/employee/ConsultancyRequest/ConsultancyRequest";
 import ConsultancyRequestAdmin from "../pages/admin/ConsultancyRequestAdmin/ConsultancyRequestAdmin";
+import VerifyingTransction from "../components/shared/admin/VerifyingTransction";
 
 const router = createBrowserRouter([
   // ============================
@@ -88,11 +89,12 @@ const router = createBrowserRouter([
           { index: true, element: <Dashboard /> },
           { path: "services", element: <Services /> },
           { path: "transactions", element: <Transactions /> },
-          // { path: "analytics", element: <Analytics /> },
+          { path: "transactions-verify", element: <VerifyingTransction /> },
           { path: "messages", element: <EmployeeMassage /> },
           { path: "feedback", element: <Feedback /> },
           { path: "change-password", element: <ChangePassword /> },
           { path: "consultancy-services", element: <ConsultancyRequest /> },
+
         ],
       },
     ],

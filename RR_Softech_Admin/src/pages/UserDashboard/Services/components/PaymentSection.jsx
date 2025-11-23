@@ -1,98 +1,143 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { fetchPaymentProvider, postIntiPayment } from "../../../../api/UserDashboard/payment";
-import { Loader2 } from "lucide-react";
+import {
+  fetchPaymentProvider,
+  postIntiPayment,
+  postSubmitProof,
+} from "../../../../api/UserDashboard/payment";
+import { Loader2, Upload } from "lucide-react";
 import { toast } from "react-toastify";
+import ProviderSelector from "./ProviderSelector";
+import ManualBankInfo from "./ManualBankInfo";
+import ProofModal from "./ProofModal";
+import CustomAmountInput from "./CustomAmountInput";
+
+/**
+ * PaymentSection
+ *
+ * - Hybrid local preview + backend confirmation
+ * - When isCustom === true, Pay Now sends the custom amount to backend:
+ *     initPayment(selectedProvider, Number(inputAmount))
+ * - initPayment will NOT overwrite user-entered custom amount.
+ */
 
 export default function PaymentSection({ milestoneId }) {
+  // Providers + selection
   const [providers, setProviders] = useState([]);
   const [selectedProvider, setSelectedProvider] = useState(null);
 
+  // Amounts
   const [inputAmount, setInputAmount] = useState("");
   const [isCustom, setIsCustom] = useState(false);
+
+  // Loading, errors
   const [loading, setLoading] = useState(false);
-  const [processingFee, setProcessingFee] = useState(0);
-  const [finalAmount, setFinalAmount] = useState(0);
-  const [paymentUrl, setPaymentUrl] = useState("");
   const [error, setError] = useState("");
 
+  // Init response from backend (initPayment)
+  const [initResponse, setInitResponse] = useState(null);
+
+  // Proof modal
+  const [isProofModalOpen, setIsProofModalOpen] = useState(false);
+  const [proofReference, setProofReference] = useState("");
+  const [proofSubmitting, setProofSubmitting] = useState(false);
+  const [proofsumitstate, setProofsumitstate] = useState(false);
+
+  // Toggle between riskpay / bank UI (kept from your earlier code)
+  const [toggle, setToggle] = useState("riskpay");
+  const handleToggleChange = (newToggleState) => {
+    setToggle(newToggleState);
+  };
+
+  // Load providers once
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       try {
         const res = await fetchPaymentProvider();
-        if (!mounted) return;
-        setProviders(res || []);
+        if (mounted) setProviders(res || []);
       } catch (err) {
-        console.log(err);
-        
+        console.error("fetchPaymentProvider", err);
         toast.error("Failed to load payment providers");
       }
     };
     load();
-    return () => (mounted = false);
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  // Helper: initialize payment with optional custom amount
   const initPayment = async (provider, customAmount = null) => {
-    if (!provider) return;
+    if (!provider) return null;
+
     setLoading(true);
     setError("");
-
     try {
       const payload = {
         provider_code: provider.provider_name_code,
       };
-      if (customAmount !== null) payload.custom_amount = String(customAmount);
+
+      // Send custom_amount only when explicitly provided
+      if (customAmount !== null) {
+        // Ensure it's a string as your backend expects
+        payload.custom_amount = String(customAmount);
+      }
 
       const response = await postIntiPayment(payload, milestoneId);
 
-      // NOTE: Fees & total only update based on backend response,
-      // not from typing.
-      const milestoneAmount = response?.milestone_amount ?? inputAmount;
+      // Save backend response
+      setInitResponse(response ?? null);
 
-      setInputAmount(milestoneAmount);
-      setProcessingFee(response?.processing_fee ?? 0);
-      setFinalAmount(response?.final_charge_amount ?? 0);
-      setPaymentUrl(response?.payment_url ?? "");
+      // IMPORTANT: only set inputAmount from backend when we didn't send a customAmount.
+      // If customAmount was provided, keep the user's inputAmount intact.
+      if (customAmount === null && response?.milestone_amount !== undefined) {
+        setInputAmount(String(response.milestone_amount));
+      }
 
       return response;
     } catch (err) {
-      console.log(err);
-      
+      console.error("initPayment", err);
       setError("Unable to initialize payment. Try again.");
-      setPaymentUrl("");
+      setInitResponse(null);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
+  // when selecting a provider: select and init (no custom amount)
   const handleProviderSelect = async (provider) => {
     if (!provider) return;
     setSelectedProvider(provider);
     setIsCustom(false);
     setError("");
-    setPaymentUrl("");
+    setInitResponse(null);
+
+    // Initialize to get default amounts (milestone_amount etc.)
     await initPayment(provider);
   };
 
+  // Amount change handler (keeps it simple and safe)
   const handleAmountChange = (e) => {
     setError("");
-
     const val = e.target.value;
 
     if (val === "") {
       setInputAmount("");
       return;
     }
+
+    // Prevent negative sign
     if (/^-/.test(val)) return;
 
+    // Allow numbers and decimals only
     const num = Number(val);
     if (Number.isNaN(num)) return;
 
-    // ONLY update main amount visually (no backend fee update)
     setInputAmount(val);
   };
 
+  // Pay Now (calls initPayment with custom amount if applicable)
   const handlePayNow = async () => {
     setError("");
 
@@ -101,179 +146,181 @@ export default function PaymentSection({ milestoneId }) {
       return;
     }
 
-    // Normal flow
-    if (!isCustom) {
-      if (!paymentUrl) {
-        const res = await initPayment(selectedProvider);
-        if (!res?.payment_url) {
-          setError("Payment initialization failed. Please try again.");
-          return;
-        }
-        window.open(res.payment_url, "_blank");
+    // Validate custom amount when custom mode is on
+    if (isCustom) {
+      if (!inputAmount || Number(inputAmount) <= 0) {
+        setError("Enter a valid custom amount.");
         return;
       }
-      window.open(paymentUrl, "_blank");
-      return;
+
+      // optional: validate against provider min/max if available
+      const min = selectedProvider?.min_amount
+        ? Number(selectedProvider.min_amount)
+        : null;
+      const max = selectedProvider?.max_amount
+        ? Number(selectedProvider.max_amount)
+        : null;
+      const numAmount = Number(inputAmount);
+
+      if (min !== null && numAmount < min) {
+        setError(`Amount must be at least ${min}`);
+        return;
+      }
+      if (max !== null && numAmount > max) {
+        setError(`Amount must be at most ${max}`);
+        return;
+      }
     }
 
-    // Custom flow
-    if (inputAmount === "" || Number(inputAmount) <= 0) {
-      setError("Enter a valid custom amount.");
-      return;
-    }
-
-    const num = Number(inputAmount);
-    const min = selectedProvider.min_amount ?? 0;
-    const max = selectedProvider.max_amount ?? Infinity;
-
-    if (num < min) {
-      setError(`Minimum amount is $${min}`);
-      return;
-    }
-    if (num > max) {
-      setError(`Maximum amount is $${max}`);
+    // Manual payment flow: show instructions rather than redirect
+    if (initResponse?.payment_type === "MANUAL") {
+      toast.info("Follow the bank instructions and submit your payment proof.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await initPayment(selectedProvider, num);
+      // If custom, send the custom amount to the backend, otherwise pass null
+      const customAmountForApi = isCustom ? Number(inputAmount) : null;
+      const res = await initPayment(selectedProvider, customAmountForApi);
+
       if (!res?.payment_url) {
-        setError("Failed to initialize custom payment. Try again.");
+        setError("Payment initialization failed.");
         return;
       }
+
+      // Open payment_url
       window.open(res.payment_url, "_blank");
     } finally {
       setLoading(false);
     }
   };
 
-  const isPayDisabled = () => {
-    if (!selectedProvider) return true;
-    if (loading) return true;
+  // When custom is disabled, re-init payment (so API-provided default amount is loaded)
+  const handleDisableCustom = () => {
+    if (selectedProvider) {
+      setIsCustom(false);
+      initPayment(selectedProvider);
+    }
+  };
 
-    if (!isCustom) {
-      return !paymentUrl && (!inputAmount || Number(inputAmount) <= 0);
+  // Open proof modal
+  const openProofModal = () => {
+    if (!initResponse?.transaction_id) {
+      setError("Initialize payment first.");
+      return;
+    }
+    setProofReference("");
+    setIsProofModalOpen(true);
+  };
+
+  // Submit proof
+  const submitProof = async () => {
+    setError("");
+    if (!initResponse?.transaction_id) {
+      setError("Missing transaction id.");
+      return;
+    }
+    if (!proofReference || proofReference.trim().length < 3) {
+      setError("Enter a valid transaction reference.");
+      return;
     }
 
-    if (!inputAmount || Number(inputAmount) <= 0) return true;
+    setProofSubmitting(true);
+    try {
+      const payload = {
+        proof_reference_number: proofReference.trim(),
+      };
 
-    const num = Number(inputAmount);
-    return num < (selectedProvider.min_amount ?? 0) ||
-           num > (selectedProvider.max_amount ?? Infinity);
+      const id = Number(initResponse.transaction_id);
+      await postSubmitProof(payload, id);
+      toast.success("Proof submitted successfully. Your transaction is under review");
+      setProofsumitstate(true);
+      setIsProofModalOpen(false);
+    } catch (err) {
+      console.error("submitProof", err);
+      setError("Failed to submit proof.");
+      toast.error("Failed to submit proof.");
+    } finally {
+      setProofSubmitting(false);
+    }
   };
 
   const displayAmount = useMemo(() => {
+    // We want a controlled string value for the input
     if (inputAmount === "") return "";
     return inputAmount;
   }, [inputAmount]);
 
+  const isPayDisabled = () => {
+    if (!selectedProvider) return true;
+    if (loading) return true;
+    return false;
+  };
+
   return (
     <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col gap-6 shadow-sm">
-      
-      {/* Providers */}
-      <div className="flex flex-col gap-3">
-        <label className="text-sm text-gray-600 font-medium">Select Payment Provider</label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {providers.map((p) => {
-            const active = selectedProvider?.id === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => handleProviderSelect(p)}
-                className={`flex items-center gap-3 p-3 border rounded-lg text-left transition-colors w-full
-                  ${active ? "border-blue-600 bg-blue-50" : "border-gray-300 hover:bg-gray-50"}
-                `}
-              >
-                <img src={p.logo} alt={p.title} className="w-10 h-10 object-contain" />
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-800">{p.title}</p>
-                  <p className="text-xs text-gray-500">
-                    Min ${p.min_amount} — Max ${p.max_amount}
-                  </p>
-                </div>
-                {active && <div className="text-xs text-blue-600 font-medium">Selected</div>}
-              </button>
-            );
-          })}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <ProviderSelector
+            providers={providers}
+            selectedProvider={selectedProvider}
+            handleProviderSelect={handleProviderSelect}
+            onToggle={handleToggleChange}
+          />
         </div>
       </div>
 
-      {/* Amount */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-4">
-          <label className="text-sm text-gray-600 font-medium">Amount</label>
-
-          {/* Custom toggle */}
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isCustom}
-              onChange={(e) => {
-                setIsCustom(e.target.checked);
-                if (!e.target.checked && selectedProvider) {
-                  initPayment(selectedProvider);
-                }
-              }}
-              className="h-4 w-4"
-            />
-            <span className="text-gray-700">Pay custom amount</span>
-          </label>
-        </div>
-
-        <input
-          type="number"
-          value={displayAmount}
-          onChange={handleAmountChange}
-          placeholder={selectedProvider ? `Min ${selectedProvider.min_amount} - Max ${selectedProvider.max_amount}` : "Select a provider first"}
-          className={`border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none ${!isCustom ? "bg-gray-100 text-gray-700" : "bg-white"}`}
-          disabled={!selectedProvider || !isCustom}
+      {/* Amount + custom toggle */}
+      {toggle === "riskpay" && (
+        <CustomAmountInput
+          initResponse={initResponse}
+          selectedProvider={selectedProvider}
+          isCustom={isCustom}
+          setIsCustom={setIsCustom}
+          displayAmount={displayAmount}
+          handleAmountChange={handleAmountChange}
+          error={error}
+          onDisableCustom={handleDisableCustom}
+          onClick={handlePayNow}
+          loading={loading}
+          disabled={isPayDisabled()}
         />
-
-        {error && <p className="text-xs text-red-600">{error}</p>}
-      </div>
-
-      {/* Breakdown */}
-      {selectedProvider && (
-        <div className="w-full bg-gray-50 p-4 rounded-lg border border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Payment Breakdown</h3>
-
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Main Amount</span>
-            <span className="font-medium text-gray-900">${displayAmount || "0"}</span>
-          </div>
-
-          <div className="flex justify-between text-sm mb-2">
-            <span className="text-gray-600">Processing Fee</span>
-            <span className="font-medium text-gray-900">${processingFee}</span>
-          </div>
-
-          <div className="flex justify-between text-base font-semibold text-gray-900 pt-2 border-t border-gray-200">
-            <span>Total Payable</span>
-            <span>${finalAmount}</span>
-          </div>
-        </div>
       )}
 
-      {/* Pay Now */}
-      <button
-        type="button"
-        onClick={handlePayNow}
-        disabled={isPayDisabled()}
-        className={`w-full text-center py-3 rounded-lg text-white font-medium transition
-          ${isPayDisabled() ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}
-        `}
-      >
-        {loading ? (
-          <div className="flex items-center justify-center gap-2">
-            <Loader2 className="animate-spin" />
-            <span>Processing...</span>
-          </div>
-        ) : (
-          <span>Pay Now</span>
-        )}
-      </button>
+      {/* Manual Bank Flow */}
+      {initResponse?.payment_type === "MANUAL" && toggle === "bank" && (
+        <>
+          <ManualBankInfo data={initResponse} />
+
+          <button
+            type="button"
+            onClick={openProofModal}
+            disabled={!initResponse?.transaction_id || proofsumitstate === true}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
+              ${
+                !initResponse?.transaction_id
+                  ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200"
+                  : "bg-green-600 text-white hover:bg-green-700"
+              }`}
+          >
+            <Upload className="h-4 w-4" />
+            Submit Payment Proof
+          </button>
+        </>
+      )}
+
+      {/* Proof Modal */}
+      {isProofModalOpen && (
+        <ProofModal
+          onClose={() => setIsProofModalOpen(false)}
+          proofReference={proofReference}
+          setProofReference={setProofReference}
+          onSubmit={submitProof}
+          submitting={proofSubmitting}
+          error={error}
+        />
+      )}
     </div>
   );
 }
