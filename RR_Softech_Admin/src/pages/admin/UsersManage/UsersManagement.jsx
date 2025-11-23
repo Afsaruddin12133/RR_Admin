@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { UserPlus, Search } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import UserModal from "../../../components/shared/admin/UserModel";
 import UserDetailsModal from "./UserDetailsModal";
 import SearchBar from "../../../components/shared/admin/SearchBar";
@@ -22,21 +22,18 @@ const UsersManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL"); // ALL | ACTIVE | INACTIVE
   const [roleFilter, setRoleFilter] = useState("ALL"); // ALL | EMPLOYEE | CUSTOMER
+
   const loadUsers = async () => {
     try {
       const data = await fetchAllProfile();
-      // API returns array of user objects; filter out OWNERS here
       const visible = (data || []).filter((u) => u.role !== "OWNER");
-      // normalize to a common shape used in UI
       const normalized = visible.map((u) => ({
         id: u.id,
         email: u.email,
         first_name: u.first_name || "",
         last_name: u.last_name || "",
         name:
-          `${(u.first_name || "").trim()} ${(
-            u.last_name || ""
-          ).trim()}`.trim() ||
+          `${(u.first_name || "").trim()} ${(u.last_name || "").trim()}`.trim() ||
           u.email ||
           "Unknown",
         role: u.role || "CUSTOMER",
@@ -65,11 +62,9 @@ const UsersManagement = () => {
       user.role.toLowerCase().includes(q);
     if (!matchesQ) return false;
 
-    // status filter
     if (statusFilter === "ACTIVE" && !user.is_active) return false;
     if (statusFilter === "INACTIVE" && user.is_active) return false;
 
-    // role filter
     if (roleFilter !== "ALL" && user.role !== roleFilter) return false;
 
     return true;
@@ -77,27 +72,26 @@ const UsersManagement = () => {
 
   const openProfileModal = async (id) => {
     try {
-      // call fetchEachProfile and open modal with fresh data
       const profile = await fetchEachProfile(id);
       if (!profile) {
         toast.error("Cannot fetch user details");
         return;
       }
-      // normalize
+
       const normalized = {
         id: profile.id,
         email: profile.email,
         first_name: profile.first_name || "",
         last_name: profile.last_name || "",
         name:
-          `${(profile.first_name || "").trim()} ${(
-            profile.last_name || ""
-          ).trim()}`.trim() ||
+          `${(profile.first_name || "").trim()} ${(profile.last_name || "").trim()}`.trim() ||
           profile.email ||
           "Unknown",
         role: profile.role || "CUSTOMER",
         is_active: !!profile.is_active,
-        joined: profile.date_joined ? profile.date_joined.split("T")[0] : null,
+        joined: profile.date_joined
+          ? profile.date_joined.split("T")[0]
+          : null,
         raw: profile,
       };
       setSelectedUser(normalized);
@@ -115,10 +109,7 @@ const UsersManagement = () => {
         is_active: newIsActive,
       };
       await editRoleInfo(payload, userId);
-      //toast.success("User updated");
-      // refresh list
       await loadUsers();
-      // update selected if open
       if (selectedUser && selectedUser.id === userId) {
         setSelectedUser((s) => ({
           ...s,
@@ -137,7 +128,6 @@ const UsersManagement = () => {
     if (!ok) return;
     try {
       await deleteUser(userId);
-      //toast.success("User deleted");
       await loadUsers();
       setOpenDetailsModal(false);
     } catch (err) {
@@ -181,31 +171,28 @@ const UsersManagement = () => {
           {/* Status filters */}
           <div className="flex gap-2 items-center">
             <button
-              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                statusFilter === "ALL"
+              className={`px-3 py-1 rounded-md text-sm font-medium transition ${statusFilter === "ALL"
                   ? "bg-gray-800 text-white"
                   : "bg-gray-100 text-gray-700"
-              }`}
+                }`}
               onClick={() => setStatusFilter("ALL")}
             >
               All
             </button>
             <button
-              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                statusFilter === "ACTIVE"
+              className={`px-3 py-1 rounded-md text-sm font-medium transition ${statusFilter === "ACTIVE"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100 text-gray-700"
-              }`}
+                }`}
               onClick={() => setStatusFilter("ACTIVE")}
             >
               Active
             </button>
             <button
-              className={`px-3 py-1 rounded-md text-sm font-medium transition ${
-                statusFilter === "INACTIVE"
+              className={`px-3 py-1 rounded-md text-sm font-medium transition ${statusFilter === "INACTIVE"
                   ? "bg-emerald-600 text-white"
                   : "bg-gray-100 text-gray-700"
-              }`}
+                }`}
               onClick={() => setStatusFilter("INACTIVE")}
             >
               Inactive
@@ -228,45 +215,63 @@ const UsersManagement = () => {
       </div>
 
       {/* User List */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 mdx:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
         {filteredUsers.map((user) => (
           <button
             key={user.id}
             onClick={() => openProfileModal(user.id)}
-            className="text-left p-4 bg-white border border-gray-100 rounded-lg hover:shadow-lg transition-shadow flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+            className="group relative text-left bg-white border border-slate-200/70 rounded-xl shadow-sm 
+                  hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 
+                  flex flex-col justify-between h-full overflow-hidden"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full font-bold text-lg">
-                {user.name?.charAt(0) || user.email?.charAt(0)}
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold truncate">{user.name}</p>
-                <p className="text-gray-500 text-sm truncate">{user.email}</p>
-              </div>
-            </div>
+            {/* CURVED LEFT BORDER STRIP */}
+            <div
+              className={`absolute inset-y-0 left-0 w-1 rounded-tr-lg rounded-br-lg 
+          ${user.is_active ? "bg-emerald-500" : "bg-rose-500"}
+        `}
+            />
 
-            <div className="flex items-center gap-4">
-              <span
-                className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                  user.is_active
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-rose-100 text-rose-600"
-                }`}
-              >
-                {user.is_active ? "Active" : "Inactive"}
-              </span>
-              <div className="text-right">
-                <p className="text-gray-400 text-sm">
-                  Joined {user.joined || "—"}
-                </p>
-                <p className="text-sm font-medium">{user.role}</p>
+            {/* Card content */}
+            <div className="relative p-4 flex flex-col justify-between h-full">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 flex items-center justify-center rounded-full font-bold text-lg">
+                  {user.name?.charAt(0) || user.email?.charAt(0)}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-800 truncate">
+                    {user.name}
+                  </p>
+                  <p className="text-gray-500 text-sm truncate">{user.email}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-4">
+                <span
+                  className={`text-xs font-semibold px-3 py-1 rounded-full 
+              ${user.is_active
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-rose-100 text-rose-600"
+                    }`}
+                >
+                  {user.is_active ? "Active" : "Inactive"}
+                </span>
+
+                <div className="text-right text-xs sm:text-sm">
+                  <p className="text-gray-400">
+                    Joined {user.joined || "—"}
+                  </p>
+                  <p className="font-medium text-slate-700 uppercase tracking-wide">
+                    {user.role}
+                  </p>
+                </div>
               </div>
             </div>
           </button>
         ))}
       </div>
 
-      {/* Add User Modal (existing) */}
+
+      {/* Add User Modal */}
       <UserModal
         isOpen={openAddModal}
         onClose={() => setOpenAddModal(false)}
