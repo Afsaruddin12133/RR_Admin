@@ -10,7 +10,7 @@ import CalendarComponent from "../../../components/common/CalendarComponent";
 /**
  * BookConsultancyModal
  * - Two selects (start & end) enforcing continuity (end must be a later slot).
- * - Resets start/end when employee or date changes (Option 1).
+ * - Resets start/end when employee or date changes.
  * - Builds ISO start_time and end_time payload for backend.
  */
 export default function BookConsultancyModal({ onClose, onSuccess }) {
@@ -86,11 +86,9 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
 
   // -------------------------
   // Fetch available slots when employeeId OR date changes
-  // Reset start & end selections per Option 1
   // -------------------------
   useEffect(() => {
     const fetchSlots = async () => {
-      // Reset selections whenever employee or date changes (Option 1)
       setSelectedStart("");
       setSelectedEnd("");
       setAvailableTimes([]);
@@ -101,8 +99,9 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
       try {
         const formattedDate = toYMD(selectedDate); // YYYY-MM-DD
         const res = await fetchAvailableSlots(formattedDate, employeeId);
-        // defensive: ensure sorted ascending (minutes)
-        const sorted = (res || []).slice().sort((a, b) => minutesOf(a) - minutesOf(b));
+        const sorted = (res || [])
+          .slice()
+          .sort((a, b) => minutesOf(a) - minutesOf(b));
         setAvailableTimes(sorted);
       } catch (err) {
         console.error("fetchAvailableSlots:", err);
@@ -117,14 +116,13 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
   }, [employeeId, selectedDate]);
 
   // -------------------------
-  // Derived end options given selectedStart
+  // Derived end options
   // -------------------------
   const endOptions = useMemo(() => {
     if (!selectedStart) return [];
     return availableTimes.filter((t) => minutesOf(t) > minutesOf(selectedStart));
   }, [availableTimes, selectedStart]);
 
-  // If start changes and current selectedEnd is no longer valid, clear it
   useEffect(() => {
     if (!selectedStart) {
       setSelectedEnd("");
@@ -144,11 +142,9 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
     if (!selectedStart) return toast.error("Please select a start time.");
     if (!selectedEnd) return toast.error("Please select an end time.");
 
-    // Build ISO times
     const startISO = timeStringToISO(selectedStart, selectedDate);
     const endISO = timeStringToISO(selectedEnd, selectedDate);
 
-    // Validate logical order
     if (minutesOf(selectedEnd) <= minutesOf(selectedStart)) {
       return toast.error("End time must be after start time.");
     }
@@ -176,14 +172,25 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
     }
   };
 
-  // -------------------------
-  // Simple UI helpers
-  // -------------------------
-  const isSubmitDisabled = !employeeId || !selectedDate || !selectedStart || !selectedEnd || loadingSubmit;
+  const isSubmitDisabled =
+    !employeeId || !selectedDate || !selectedStart || !selectedEnd || loadingSubmit;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-xl rounded-xl shadow-xl p-6 relative animate-fadeIn">
+    // OVERLAY – only centers the card, no scrolling here
+    <div
+      className="
+        fixed inset-0 bg-black/40 backdrop-blur-sm z-50
+        flex items-center justify-center
+        p-4
+      "
+    >
+      {/* MODAL CARD – limited to viewport height and scrolls internally */}
+      <div
+        className="
+          bg-white w-full max-w-xl rounded-xl shadow-xl p-6 relative animate-fadeIn
+          max-h-[90vh] overflow-y-auto no-scrollbar
+        "
+      >
         {/* Close */}
         <button
           onClick={onClose}
@@ -193,7 +200,9 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
           <X size={22} />
         </button>
 
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Book a Meeting</h2>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+          Book a Meeting
+        </h2>
 
         {/* Employee */}
         <div className="mb-4">
@@ -220,11 +229,14 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
           <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
             <Calendar size={18} /> Select Date
           </label>
-          <CalendarComponent onChange={(date) => setSelectedDate(date)} selectedDate={selectedDate} />
+          <CalendarComponent
+            onChange={(date) => setSelectedDate(date)}
+            selectedDate={selectedDate}
+          />
         </div>
 
         {/* Start & End selectors */}
-        <div className="mb-4 grid grid-cols-2 gap-4">
+        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
               <Clock size={16} /> Start Time
@@ -240,7 +252,9 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
                 className="w-full border rounded-lg px-3 py-2 bg-gray-50"
                 aria-label="Select start time"
               >
-                <option value="">{availableTimes.length ? "Choose start time" : "No slots"}</option>
+                <option value="">
+                  {availableTimes.length ? "Choose start time" : "No slots"}
+                </option>
                 {availableTimes.map((t) => (
                   <option key={t} value={t}>
                     {t}
@@ -262,7 +276,13 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
               className="w-full border rounded-lg px-3 py-2 bg-gray-50"
               aria-label="Select end time"
             >
-              <option value="">{selectedStart ? (endOptions.length ? "Choose end time" : "No valid end times") : "Select start first"}</option>
+              <option value="">
+                {selectedStart
+                  ? endOptions.length
+                    ? "Choose end time"
+                    : "No valid end times"
+                  : "Select start first"}
+              </option>
               {endOptions.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -274,12 +294,16 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
 
         {/* Duration preview */}
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-1">Duration</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1">
+            Duration
+          </label>
           <div className="text-sm text-gray-700">
             {selectedStart && selectedEnd ? (
               <strong>{durationBetween(selectedStart, selectedEnd)}</strong>
             ) : (
-              <span className="text-gray-500">Select start and end to see duration</span>
+              <span className="text-gray-500">
+                Select start and end to see duration
+              </span>
             )}
           </div>
         </div>
@@ -303,7 +327,9 @@ export default function BookConsultancyModal({ onClose, onSuccess }) {
           onClick={handleSubmit}
           disabled={isSubmitDisabled}
           className={`w-full py-3 rounded-lg font-medium shadow transition ${
-            isSubmitDisabled ? "bg-blue-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 text-white"
+            isSubmitDisabled
+              ? "bg-blue-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
           }`}
         >
           {loadingSubmit ? "Booking..." : "Confirm Booking"}

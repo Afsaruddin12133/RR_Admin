@@ -88,7 +88,7 @@ export default function Orders() {
   };
 
   return (
-    <div className="p-6 w-full bg-white min-h-screen">
+    <div className="p-6 w-full bg-background min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-800">Orders</h1>
@@ -128,7 +128,7 @@ export default function Orders() {
         <p className="text-gray-500 text-center py-10">Loading orders...</p>
       ) : currentItems.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
             {currentItems.map((order) => (
               <OrderCard
                 key={order.id}

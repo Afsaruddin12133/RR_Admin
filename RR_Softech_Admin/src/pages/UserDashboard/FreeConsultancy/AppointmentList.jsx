@@ -35,7 +35,7 @@ export default function AppointmentList({ showAppointments }) {
       {showAppointments.length === 0 ? (
         <p className="text-gray-500">No appointments found.</p>
       ) : (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-5 sm:gap-6 lg:gap-8 md:gap-6 mdx:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-2">
           {showAppointments.map((item) => {
             /* ---------- EMPLOYEE INFO FROM API ---------- */
             const employee = item.employee || {};
