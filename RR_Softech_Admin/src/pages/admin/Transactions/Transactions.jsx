@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
+import jsPDF from "jspdf";
 import SearchBar from "../../../components/shared/admin/SearchBar";
 import { fetchTransactionsall } from "../../../api/UserDashboard/transaction";
 import Pagination from "../../../components/shared/userDashboard/Pagination";
+import { statusColors } from "./../../../utils/UserDashboard/services/statusColors";
+import { useNavigate } from "react-router-dom";
+import useAuth from "../../../hooks/UserDashboard/useAuth";
 
 export default function Transactions() {
   const [search, setSearch] = useState("");
@@ -11,13 +15,9 @@ export default function Transactions() {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Status Colors
-  const statusColor = {
-    SUCCESS: "bg-green-600 text-white",
-    FAILED: "bg-red-600 text-white",
-    PENDING: "bg-yellow-600 text-white",
-  };
+   const navigate = useNavigate();
+   const {auth} = useAuth();
+   
 
   // Load Data
   useEffect(() => {
@@ -61,6 +61,69 @@ export default function Transactions() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const generateTransactionPDF = (item) => {
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFontSize(18);
+    doc.text("Transaction Summary", 15, 20);
+
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+
+    doc.text(`Generated On: ${new Date().toLocaleString()}`, 15, 30);
+
+    doc.setDrawColor(180);
+    doc.line(15, 35, 195, 35);
+
+    // Transaction Details
+    doc.setFontSize(14);
+    doc.setTextColor(20);
+    doc.text("Transaction Details", 15, 50);
+
+    doc.setFontSize(12);
+    doc.setTextColor(50);
+
+    const details = [
+      ["Transaction ID:", item.id],
+      ["Customer Name:", item.user_name || "N/A"],
+      ["Email:", item.customer_email || "N/A"],
+      ["Plan / Milestone:", item.milestone_title || item.plan_name || "N/A"],
+      ["Amount:", `$${item.amount}`],
+      ["Provider:", item.provider_name || "N/A"],
+      ["Status:", item.status],
+      ["Date & Time:", new Date(item.timestamp).toLocaleString()],
+      ["Order:", item.order],
+      ["Milestone:", item.milestone],
+    ];
+
+    let y = 65;
+    details.forEach(([label, value]) => {
+      doc.setFont("helvetica", "bold");
+      doc.text(label, 15, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(String(value), 70, y);
+      y += 10;
+    });
+
+    // Footer
+    doc.setDrawColor(210);
+    doc.line(15, y + 5, 195, y + 5);
+
+    doc.setFontSize(11);
+    doc.setTextColor(120);
+    doc.text("This is a system-generated transaction summary.", 15, y + 15);
+
+    // Save
+    doc.save(`transaction_${item.id}.pdf`);
+  };
+
+const openDetails = (item) => {
+  const base = auth.role === "EMPLOYEE" ? "employee" : "admin";
+  navigate(`/${base}/transactions/${item.id}/`, { state: { item } });
+};
+
+
   return (
     <div className="p-6 mx-auto">
       {/* Header */}
@@ -95,12 +158,13 @@ export default function Transactions() {
             <thead className="bg-gray-50">
               <tr className="text-left text-sm text-gray-600">
                 <th className="py-3 px-4">Transaction ID</th>
-                <th className="py-3 px-4">Order ID</th>
-                <th className="py-3 px-4">Service Name</th>
-                <th className="py-3 px-4">Plan</th>
+                <th className="py-3 px-4">Customer</th>
+                <th className="py-3 px-4">Milestone / Plan</th>
                 <th className="py-3 px-4">Amount</th>
+                <th className="py-3 px-4">Provider</th>
                 <th className="py-3 px-4">Date & Time</th>
                 <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">PDF</th>
               </tr>
             </thead>
 
@@ -110,28 +174,58 @@ export default function Transactions() {
                   <tr
                     key={item.id}
                     className="border-b border-gray-200 text-sm hover:bg-gray-100 transition"
+                    onClick={() => openDetails(item)}
                   >
+                    {/* Transaction ID */}
                     <td className="py-3 px-4 font-medium">{item.id}</td>
-                    <td className="py-3 px-4">{item.order_id}</td>
-                    <td className="py-3 px-4">{item.service_name}</td>
-                    <td className="py-3 px-4">{item.plan_name}</td>
+
+                    {/* Customer Name or Email */}
+                    <td className="py-3 px-4">
+                      {item.user_name || item.customer_email || "N/A"}
+                    </td>
+
+                    {/* Milestone Title / Plan Name */}
+                    <td className="py-3 px-4">
+                      {item.milestone_title
+                        ? item.milestone_title
+                        : item.plan_name || "N/A"}
+                    </td>
+
+                    {/* Amount */}
                     <td className="py-3 px-4 font-semibold">${item.amount}</td>
+
+                    {/* Payment Provider */}
+                    <td className="py-3 px-4">{item.provider_name || "N/A"}</td>
+
+                    {/* Date */}
                     <td className="py-3 px-4">
                       {new Date(item.timestamp).toLocaleString()}
                     </td>
+
+                    {/* Status */}
                     <td className="py-3 px-4">
                       <span
-                        className={`px-4 py-1 rounded-xl text-xs font-medium ${statusColor[item.status]}`}
+                        className={`px-4 py-1 rounded-xl text-xs font-medium ${
+                          statusColors[item.status]
+                        }`}
                       >
                         {item.status}
                       </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => generateTransactionPDF(item)}
+                        className="text-blue-600 underline hover:text-blue-800 text-sm"
+                      >
+                        Download
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="8"
+                    colSpan="7"
                     className="text-center py-6 text-gray-500 text-sm"
                   >
                     No transactions found
