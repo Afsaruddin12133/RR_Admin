@@ -188,7 +188,7 @@ export default function Sidebar({ onSelectConversation, setParentLoading }) {
                   </div>
 
                   <div className="flex items-center justify-between mt-1">
-                    <div className="text-xs text-gray-500 truncate max-w-[160px]">
+                    <div className="text-xs text-gray-500 truncate max-w-40">
                       {u.lastMessage || "—"}
                     </div>
 

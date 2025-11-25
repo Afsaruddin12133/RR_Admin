@@ -29,7 +29,7 @@ export default function ServiceCard({ service, onViewPlans }) {
               text-gray-900
               group-hover:text-blue-600
               transition-colors
-              break-words
+              wrap-break-words
             "
           >
             {service.name}
