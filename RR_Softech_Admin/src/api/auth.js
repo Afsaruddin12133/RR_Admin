@@ -4,7 +4,7 @@ import axios from "axios";
 //https://global.genzsoft.top/api/
 
 
-const BASE_URL = "https://global.genzsoft.top/api/";
+const BASE_URL = "https://backend-final.rrsoftech.co.uk/api/";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

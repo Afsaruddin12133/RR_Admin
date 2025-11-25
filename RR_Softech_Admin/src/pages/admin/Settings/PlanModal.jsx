@@ -67,6 +67,14 @@ function SelectField({
     );
 }
 
+// helper to slugify plan name
+const slugify = (str = "") =>
+    str
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+
 export default function PlanModal({
     open,
     onClose,
@@ -83,32 +91,82 @@ export default function PlanModal({
             description: "",
             price: "",
             billing_cycle: "MONTHLY",
+            // featuresText = textarea value, one feature per line
+            featuresText: "",
         }
     );
 
+    // track whether user edited slug manually
+    const [slugEdited, setSlugEdited] = useState(false);
+
     useEffect(() => {
         setForm(
-            data || {
-                service: "",
-                name: "",
-                slug: "",
-                description: "",
-                price: "",
-                billing_cycle: "MONTHLY",
-            }
+            data
+                ? {
+                    service: data.service || "",
+                    name: data.name || "",
+                    slug: data.slug || "",
+                    description: data.description || "",
+                    price: data.price || "",
+                    billing_cycle: data.billing_cycle || "MONTHLY",
+                    featuresText: Array.isArray(data.features)
+                        ? data.features.map((f) => f.description || "").join("\n")
+                        : "",
+                }
+                : {
+                    service: "",
+                    name: "",
+                    slug: "",
+                    description: "",
+                    price: "",
+                    billing_cycle: "MONTHLY",
+                    featuresText: "",
+                }
         );
+        setSlugEdited(false);
     }, [data, open]);
 
     if (!open) return null;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setForm((prev) => ({ ...prev, [name]: value }));
+
+        // when user edits slug directly, stop auto-generation
+        if (name === "slug") {
+            setSlugEdited(true);
+            setForm((prev) => ({ ...prev, slug: value }));
+            return;
+        }
+
+        // normal updates
+        setForm((prev) => {
+            const updated = { ...prev, [name]: value };
+
+            // auto-generate slug from name if user has not edited the slug
+            if (name === "name" && !slugEdited) {
+                updated.slug = slugify(value);
+            }
+
+            return updated;
+        });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(form);
+
+        // convert textarea into array of feature strings
+        const features =
+            form.featuresText
+                ?.split("\n")
+                .map((line) => line.trim())
+                .filter(Boolean) || [];
+
+        const { featuresText, ...rest } = form;
+
+        onSave({
+            ...rest,
+            features, // array of strings, e.g. ["3 Designs per month", "Logo Design", ...]
+        });
     };
 
     const serviceOptions = (services || []).map((s) => ({
@@ -164,7 +222,7 @@ export default function PlanModal({
                                 value={form.name || ""}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. Basic, Pro, Enterprise"
+                                placeholder="e.g. Lite, Pro, Enterprise"
                             />
                             <TextField
                                 label="Slug"
@@ -172,7 +230,7 @@ export default function PlanModal({
                                 value={form.slug || ""}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. basic, pro, enterprise"
+                                placeholder="auto-generated-from-name"
                             />
                         </div>
 
@@ -185,6 +243,22 @@ export default function PlanModal({
                             onChange={handleChange}
                         />
 
+                        {/* Features */}
+                        <div>
+                            <TextAreaField
+                                label="Features"
+                                name="featuresText"
+                                rows={4}
+                                value={form.featuresText || ""}
+                                onChange={handleChange}
+                                placeholder={`3 designs per month\nLogo design\nJPG, PNG formats\n3–5 days turnaround\nEmail support`}
+                            />
+                            <p className="mt-1 text-xs text-slate-500">
+                                Write <span className="font-semibold">one feature per line</span>{" "}
+                                (these will appear as bullet points under the plan).
+                            </p>
+                        </div>
+
                         {/* Price + billing */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <TextField
@@ -196,7 +270,7 @@ export default function PlanModal({
                                 value={form.price || ""}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. 199"
+                                placeholder="e.g. 99"
                             />
 
                             <SelectField
