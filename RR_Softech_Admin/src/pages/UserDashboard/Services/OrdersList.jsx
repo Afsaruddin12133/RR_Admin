@@ -112,7 +112,7 @@ export default function OrdersList() {
       <div
         className={
           viewMode === "grid"
-            ? "w-full max-w-xl sm:max-w-3xl xl:max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-6"
+            ? "sm:max-w-3xl xl:max-w-6xl  grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-5 sm:gap-8"
             : "w-full max-w-xl sm:max-w-3xl xl:max-w-5xl mx-auto flex flex-col gap-4"
         }
       >
