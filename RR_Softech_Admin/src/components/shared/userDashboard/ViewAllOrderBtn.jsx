@@ -14,7 +14,7 @@ export default function ViewAllOrderBtn() {
         
             bg-white text-slate-700 border border-slate-200
             hover:text-white hover:border-transparent
-            hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700
+            hover:bg-linear-to-r hover:from-blue-600 hover:to-blue-700
         
             hover:shadow-[0_8px_20px_rgba(37,99,235,0.25)]
             hover:-translate-y-0.5 hover:scale-[1.03]

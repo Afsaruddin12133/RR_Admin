@@ -1,10 +1,10 @@
 import axios from "axios";
 
-// https://backend-final.rrsoftech.co.uk/
+// https://backend-final.rrsoftech.co.uk/api/
 //https://global.genzsoft.top/api/
 
 
-const BASE_URL = "https://global.genzsoft.top/api/";
+const BASE_URL = "https://backend-final.rrsoftech.co.uk/api/";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
