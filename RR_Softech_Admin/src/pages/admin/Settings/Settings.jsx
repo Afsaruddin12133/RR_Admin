@@ -204,31 +204,47 @@ export default function Settings() {
 
       const payload = {
         service: Number(formValues.service),
-        name: formValues.name?.trim(),
-        slug: formValues.slug?.trim(),
-        description: formValues.description?.trim(),
-        price: String(formValues.price),
-        billing_cycle: formValues.billing_cycle,
+        name: (formValues.name || "").trim(),
+        slug: (formValues.slug || "").trim(),
+        description: (formValues.description || "").trim(),
+        // send as number (DRF DecimalField / FloatField accepts numeric)
+        price: Number(formValues.price),
+        billing_cycle: formValues.billing_cycle, // e.g. "MONTHLY"
       };
+
+      console.log("Plan payload:", payload);
 
       const saved = await createPlan(payload);
       alert(`Plan "${saved.name}" saved successfully.`);
       setPlanModalOpen(false);
     } catch (err) {
       console.error("Failed to save plan", err);
-      console.error("Server response:", err.response?.data);
-      alert("Could not save plan (server error). Check console for details.");
+      console.error("Server response:", err?.response?.data);
+
+      const data = err?.response?.data;
+      if (data && typeof data === "object") {
+        const messages = Object.entries(data)
+          .map(([field, msgs]) => {
+            const text = Array.isArray(msgs) ? msgs.join(", ") : String(msgs);
+            return `${field}: ${text}`;
+          })
+          .join("\n");
+        alert(`Could not save plan:\n${messages}`);
+      } else {
+        alert("Could not save plan (network or server error). See console for details.");
+      }
     } finally {
       setPlanLoading(false);
     }
   };
 
+
   const providerModalData =
     openProvider === "manual"
       ? { ...initialProviderState.manual }
       : openProvider === "riskpay"
-      ? { ...initialProviderState.riskpay }
-      : null;
+        ? { ...initialProviderState.riskpay }
+        : null;
 
   // Fullscreen loading state
   if (loading) {

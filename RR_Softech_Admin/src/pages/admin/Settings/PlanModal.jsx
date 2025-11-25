@@ -1,4 +1,3 @@
-// src/pages/admin/Settings/PlanModal.jsx
 import React, { useEffect, useState } from "react";
 
 function TextField({ label, name, type = "text", required = false, ...props }) {
@@ -192,12 +191,14 @@ export default function PlanModal({
                                 label="Price"
                                 name="price"
                                 type="number"
+                                min="0"
                                 step="0.01"
                                 value={form.price || ""}
                                 onChange={handleChange}
                                 required
                                 placeholder="e.g. 199"
                             />
+
                             <SelectField
                                 label="Billing cycle"
                                 name="billing_cycle"
