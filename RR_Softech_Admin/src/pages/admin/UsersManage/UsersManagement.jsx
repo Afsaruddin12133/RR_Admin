@@ -3,15 +3,15 @@ import { UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import UserModal from "../../../components/shared/admin/UserModel";
 import SearchBar from "../../../components/shared/admin/SearchBar";
-import {
-  fetchAllProfile,
-} from "../../../api/UserDashboard/profileInfo";
+import { fetchAllProfile } from "../../../api/UserDashboard/profileInfo";
 import { toast } from "react-toastify";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 const UsersManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [openAddModal, setOpenAddModal] = useState(false);
+  const [loading, setLoading] = useState(true); // start in loading state
 
   // Filters & search
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,6 +20,7 @@ const UsersManagement = () => {
 
   const loadUsers = async () => {
     try {
+      setLoading(true);
       const data = await fetchAllProfile();
       const visible = (data || []).filter((u) => u.role !== "OWNER");
       const normalized = visible.map((u) => ({
@@ -40,6 +41,8 @@ const UsersManagement = () => {
     } catch (err) {
       console.error("Failed to fetch users", err);
       toast.error("Failed to load users");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -69,21 +72,44 @@ const UsersManagement = () => {
     navigate(`/admin/users-manage/${userId}/`);
   };
 
+  // ✅ Single fullscreen loading state (initial load)
+  if (loading && !users.length) {
+    return (
+      <LoadingSpinner
+        variant="fullscreen"
+        size="lg"
+        message="Loading Users..."
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6">
+    <div className="relative bg-gray-50 h-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 border border-gray-200 rounded-xl overflow-x-hidden">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 sm:p-8 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/40">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <div className="w-12 h-12 rounded-xl bg-linear-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/40">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-900">Users Management</h1>
+                  <h1 className="text-3xl font-bold text-slate-900">
+                    Users Management
+                  </h1>
                   <p className="text-slate-600 text-sm mt-1">
                     Manage registered users and their roles/active status.
                   </p>
@@ -93,7 +119,7 @@ const UsersManagement = () => {
 
             <button
               onClick={() => setOpenAddModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-lg shadow-indigo-600/40 hover:shadow-xl hover:shadow-indigo-600/50 flex items-center justify-center gap-2"
+              className="px-6 py-3 bg-linear-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-lg shadow-indigo-600/40 hover:shadow-xl hover:shadow-indigo-600/50 flex items-center justify-center gap-2"
             >
               <UserPlus className="w-5 h-5" />
               Add User
@@ -175,21 +201,28 @@ const UsersManagement = () => {
               {/* Status Strip */}
               <div
                 className={`absolute inset-y-0 left-0 w-1.5 rounded-tr-xl rounded-br-xl 
-                  ${user.is_active ? "bg-gradient-to-b from-emerald-500 to-emerald-600" : "bg-gradient-to-b from-rose-500 to-rose-600"}
+                  ${
+                    user.is_active
+                      ? "bg-linear-to-b from-emerald-500 to-emerald-600"
+                      : "bg-linear-to-b from-rose-500 to-rose-600"
+                  }
                 `}
               />
 
               {/* Card content */}
               <div className="relative p-5 flex flex-col justify-between h-full">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30 flex-shrink-0">
-                    {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
+                  <div className="w-14 h-14 rounded-full bg-linear-to-br from-indigo-400 to-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-indigo-500/30 shrink-0">
+                    {user.name?.charAt(0)?.toUpperCase() ||
+                      user.email?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-slate-900 truncate text-lg group-hover:text-indigo-600 transition-colors">
                       {user.name}
                     </p>
-                    <p className="text-slate-500 text-sm truncate">{user.email}</p>
+                    <p className="text-slate-500 text-sm truncate">
+                      {user.email}
+                    </p>
                   </div>
                 </div>
 
@@ -214,26 +247,42 @@ const UsersManagement = () => {
 
                   <div className="pt-3 border-t border-slate-200">
                     <p className="text-xs text-slate-500">Joined</p>
-                    <p className="text-sm font-semibold text-slate-700">{user.joined || "—"}</p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {user.joined || "—"}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {/* Hover indicator */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-linear-to-r from-indigo-500 to-indigo-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
             </button>
           ))}
         </div>
 
-        {filteredUsers.length === 0 && (
+        {filteredUsers.length === 0 && !loading && (
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-12 text-center">
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <svg
+                className="w-10 h-10 text-slate-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">No users found</h3>
-            <p className="text-slate-600">Try adjusting your search or filters</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">
+              No users found
+            </h3>
+            <p className="text-slate-600">
+              Try adjusting your search or filters
+            </p>
           </div>
         )}
       </div>

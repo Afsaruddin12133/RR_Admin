@@ -6,6 +6,7 @@ import Pagination from "../../../components/shared/userDashboard/Pagination";
 import { statusColors } from "./../../../utils/UserDashboard/services/statusColors";
 import { useNavigate } from "react-router-dom";
 import useAuth from "../../../hooks/UserDashboard/useAuth";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function Transactions() {
   const [search, setSearch] = useState("");
@@ -15,16 +16,16 @@ export default function Transactions() {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-   const navigate = useNavigate();
-   const {auth} = useAuth();
-   
+  const navigate = useNavigate();
+  const { auth } = useAuth();
 
   // Load Data
   useEffect(() => {
     async function loadTransactions() {
       try {
+        setLoading(true);
         const data = await fetchTransactionsall();
-        setTransactions(data);
+        setTransactions(data || []);
       } catch (error) {
         console.error("Error loading transactions:", error);
       } finally {
@@ -37,7 +38,9 @@ export default function Transactions() {
   // Search Logic (search all fields)
   const filteredData = transactions.filter((item) => {
     const s = search.toLowerCase();
-    const dateString = new Date(item.timestamp).toLocaleString().toLowerCase();
+    const dateString = new Date(item.timestamp)
+      .toLocaleString()
+      .toLowerCase();
 
     return (
       item.id.toString().includes(s) ||
@@ -118,14 +121,24 @@ export default function Transactions() {
     doc.save(`transaction_${item.id}.pdf`);
   };
 
-const openDetails = (item) => {
-  const base = auth.role === "EMPLOYEE" ? "employee" : "admin";
-  navigate(`/${base}/transactions/${item.id}/`, { state: { item } });
-};
+  const openDetails = (item) => {
+    const base = auth.role === "EMPLOYEE" ? "employee" : "admin";
+    navigate(`/${base}/transactions/${item.id}/`, { state: { item } });
+  };
 
+  // Fullscreen loader for the initial fetch
+  if (loading && !transactions.length) {
+    return (
+      <LoadingSpinner
+        variant="fullscreen"
+        size="lg"
+        message="Loading Transactions..."
+      />
+    );
+  }
 
   return (
-    <div className="p-6 mx-auto">
+    <div className="relative bg-gray-50 h-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 border border-gray-200 rounded-xl overflow-x-hidden">
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-800">
@@ -144,101 +157,98 @@ const openDetails = (item) => {
         className="mb-5"
       />
 
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-10 text-gray-500 text-sm">
-          Loading transactions...
-        </div>
-      )}
-
       {/* Table */}
-      {!loading && (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="w-full border-collapse min-w-[900px]">
-            <thead className="bg-gray-50">
-              <tr className="text-left text-sm text-gray-600">
-                <th className="py-3 px-4">Transaction ID</th>
-                <th className="py-3 px-4">Customer</th>
-                <th className="py-3 px-4">Milestone / Plan</th>
-                <th className="py-3 px-4">Amount</th>
-                <th className="py-3 px-4">Provider</th>
-                <th className="py-3 px-4">Date & Time</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4">PDF</th>
-              </tr>
-            </thead>
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="w-full border-collapse min-w-[900px]">
+          <thead className="bg-gray-50">
+            <tr className="text-left text-sm text-gray-600">
+              <th className="py-3 px-4">Transaction ID</th>
+              <th className="py-3 px-4">Customer</th>
+              <th className="py-3 px-4">Milestone / Plan</th>
+              <th className="py-3 px-4">Amount</th>
+              <th className="py-3 px-4">Provider</th>
+              <th className="py-3 px-4">Date & Time</th>
+              <th className="py-3 px-4">Status</th>
+              <th className="py-3 px-4">PDF</th>
+            </tr>
+          </thead>
 
-            <tbody>
-              {currentItems.length > 0 ? (
-                currentItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-b border-gray-200 text-sm hover:bg-gray-100 transition"
-                    onClick={() => openDetails(item)}
-                  >
-                    {/* Transaction ID */}
-                    <td className="py-3 px-4 font-medium">{item.id}</td>
+          <tbody>
+            {currentItems.length > 0 ? (
+              currentItems.map((item) => (
+                <tr
+                  key={item.id}
+                  className="border-b border-gray-200 text-sm hover:bg-gray-100 transition"
+                  onClick={() => openDetails(item)}
+                >
+                  {/* Transaction ID */}
+                  <td className="py-3 px-4 font-medium">{item.id}</td>
 
-                    {/* Customer Name or Email */}
-                    <td className="py-3 px-4">
-                      {item.user_name || item.customer_email || "N/A"}
-                    </td>
+                  {/* Customer Name or Email */}
+                  <td className="py-3 px-4">
+                    {item.user_name || item.customer_email || "N/A"}
+                  </td>
 
-                    {/* Milestone Title / Plan Name */}
-                    <td className="py-3 px-4">
-                      {item.milestone_title
-                        ? item.milestone_title
-                        : item.plan_name || "N/A"}
-                    </td>
+                  {/* Milestone Title / Plan Name */}
+                  <td className="py-3 px-4">
+                    {item.milestone_title
+                      ? item.milestone_title
+                      : item.plan_name || "N/A"}
+                  </td>
 
-                    {/* Amount */}
-                    <td className="py-3 px-4 font-semibold">${item.amount}</td>
+                  {/* Amount */}
+                  <td className="py-3 px-4 font-semibold">${item.amount}</td>
 
-                    {/* Payment Provider */}
-                    <td className="py-3 px-4">{item.provider_name || "N/A"}</td>
+                  {/* Payment Provider */}
+                  <td className="py-3 px-4">
+                    {item.provider_name || "N/A"}
+                  </td>
 
-                    {/* Date */}
-                    <td className="py-3 px-4">
-                      {new Date(item.timestamp).toLocaleString()}
-                    </td>
+                  {/* Date */}
+                  <td className="py-3 px-4">
+                    {new Date(item.timestamp).toLocaleString()}
+                  </td>
 
-                    {/* Status */}
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-4 py-1 rounded-xl text-xs font-medium ${
-                          statusColors[item.status]
+                  {/* Status */}
+                  <td className="py-3 px-4">
+                    <span
+                      className={`px-4 py-1 rounded-xl text-xs font-medium ${statusColors[item.status]
                         }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => generateTransactionPDF(item)}
-                        className="text-blue-600 underline hover:text-blue-800 text-sm"
-                      >
-                        Download
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="text-center py-6 text-gray-500 text-sm"
-                  >
-                    No transactions found
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+
+                  {/* Download PDF */}
+                  <td className="py-3 px-4">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevent row navigation
+                        generateTransactionPDF(item);
+                      }}
+                      className="text-blue-600 underline hover:text-blue-800 text-sm"
+                    >
+                      Download
+                    </button>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="text-center py-6 text-gray-500 text-sm"
+                >
+                  No transactions found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
-      {!loading && totalPages > 1 && (
+      {totalPages > 1 && (
         <div className="mt-8 flex justify-center">
           <Pagination
             currentPage={currentPage}
