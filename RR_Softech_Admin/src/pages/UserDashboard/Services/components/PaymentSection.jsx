@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { Upload } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import {
   fetchPaymentProvider,
   postIntiPayment,
   postSubmitProof,
 } from "../../../../api/UserDashboard/payment";
-import { Loader2, Upload } from "lucide-react";
-import { toast } from "react-toastify";
-import ProviderSelector from "./ProviderSelector";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
+import CustomAmountInput from "./CustomAmountInput";
 import ManualBankInfo from "./ManualBankInfo";
 import ProofModal from "./ProofModal";
-import CustomAmountInput from "./CustomAmountInput";
+import ProviderSelector from "./ProviderSelector";
 
 /**
  * PaymentSection
@@ -32,6 +33,8 @@ export default function PaymentSection({ milestoneId }) {
   // Loading, errors
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [proloading, setProLoading] = useState(false);
+
 
   // Init response from backend (initPayment)
   const [initResponse, setInitResponse] = useState(null);
@@ -112,9 +115,11 @@ export default function PaymentSection({ milestoneId }) {
     setIsCustom(false);
     setError("");
     setInitResponse(null);
+    setProLoading(true);
 
     // Initialize to get default amounts (milestone_amount etc.)
     await initPayment(provider);
+    setProLoading(false);
   };
 
   // Amount change handler (keeps it simple and safe)
@@ -273,6 +278,7 @@ export default function PaymentSection({ milestoneId }) {
 
       {/* Amount + custom toggle */}
       {toggle === "riskpay" && (
+        <>
         <CustomAmountInput
           initResponse={initResponse}
           selectedProvider={selectedProvider}
@@ -283,9 +289,14 @@ export default function PaymentSection({ milestoneId }) {
           error={error}
           onDisableCustom={handleDisableCustom}
           onClick={handlePayNow}
-          loading={loading}
+          loading = {loading}
           disabled={isPayDisabled()}
         />
+        {proloading && <LoadingSpinner 
+        variant="inline"
+        size="lg"
+        message="Loading Payment..."/>}
+        </>
       )}
 
       {/* Manual Bank Flow */}
@@ -309,6 +320,10 @@ export default function PaymentSection({ milestoneId }) {
           </button>
         </>
       )}
+      {loading && <LoadingSpinner 
+        variant="inline"
+        size="lg"
+        message="Loading Payment..."/>}
 
       {/* Proof Modal */}
       {isProofModalOpen && (
