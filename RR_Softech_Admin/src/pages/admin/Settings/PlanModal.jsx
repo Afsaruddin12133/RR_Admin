@@ -35,14 +35,7 @@ function TextAreaField({ label, name, required = false, ...props }) {
     );
 }
 
-function SelectField({
-    label,
-    name,
-    value,
-    onChange,
-    options,
-    required = false,
-}) {
+function SelectField({ label, name, value, onChange, options, required = false }) {
     return (
         <label className="block text-sm">
             <span className="mb-1 flex items-center gap-1 font-medium text-slate-700">
@@ -83,46 +76,37 @@ export default function PlanModal({
     loading,
     services,
 }) {
-    const [form, setForm] = useState(
-        data || {
-            service: "",
-            name: "",
-            slug: "",
-            description: "",
-            price: "",
-            billing_cycle: "MONTHLY",
-            // featuresText = textarea value, one feature per line
-            featuresText: "",
-        }
-    );
+    const [form, setForm] = useState({
+        service: "",
+        name: "",
+        slug: "",
+        description: "",
+        price: "",
+        billing_cycle: "MONTHLY",
+    });
 
-    // track whether user edited slug manually
     const [slugEdited, setSlugEdited] = useState(false);
 
     useEffect(() => {
-        setForm(
-            data
-                ? {
-                    service: data.service || "",
-                    name: data.name || "",
-                    slug: data.slug || "",
-                    description: data.description || "",
-                    price: data.price || "",
-                    billing_cycle: data.billing_cycle || "MONTHLY",
-                    featuresText: Array.isArray(data.features)
-                        ? data.features.map((f) => f.description || "").join("\n")
-                        : "",
-                }
-                : {
-                    service: "",
-                    name: "",
-                    slug: "",
-                    description: "",
-                    price: "",
-                    billing_cycle: "MONTHLY",
-                    featuresText: "",
-                }
-        );
+        if (data) {
+            setForm({
+                service: data.service || "",
+                name: data.name || "",
+                slug: data.slug || "",
+                description: data.description || "",
+                price: data.price || "",
+                billing_cycle: data.billing_cycle || "MONTHLY",
+            });
+        } else {
+            setForm({
+                service: "",
+                name: "",
+                slug: "",
+                description: "",
+                price: "",
+                billing_cycle: "MONTHLY",
+            });
+        }
         setSlugEdited(false);
     }, [data, open]);
 
@@ -131,42 +115,24 @@ export default function PlanModal({
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // when user edits slug directly, stop auto-generation
         if (name === "slug") {
             setSlugEdited(true);
             setForm((prev) => ({ ...prev, slug: value }));
             return;
         }
 
-        // normal updates
         setForm((prev) => {
             const updated = { ...prev, [name]: value };
-
-            // auto-generate slug from name if user has not edited the slug
             if (name === "name" && !slugEdited) {
                 updated.slug = slugify(value);
             }
-
             return updated;
         });
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // convert textarea into array of feature strings
-        const features =
-            form.featuresText
-                ?.split("\n")
-                .map((line) => line.trim())
-                .filter(Boolean) || [];
-
-        const { featuresText, ...rest } = form;
-
-        onSave({
-            ...rest,
-            features, // array of strings, e.g. ["3 Designs per month", "Logo Design", ...]
-        });
+        onSave(form); // description is the multi-line features string
     };
 
     const serviceOptions = (services || []).map((s) => ({
@@ -222,7 +188,7 @@ export default function PlanModal({
                                 value={form.name || ""}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. Lite, Pro, Enterprise"
+                                placeholder="e.g. Lite, Pro, Growth Plus"
                             />
                             <TextField
                                 label="Slug"
@@ -234,30 +200,22 @@ export default function PlanModal({
                             />
                         </div>
 
-                        {/* Description */}
+                        {/* Description = one feature per line */}
                         <TextAreaField
-                            label="Description"
+                            label="Description / Features"
                             name="description"
-                            rows={3}
+                            rows={6}
                             value={form.description || ""}
                             onChange={handleChange}
+                            required
+                            placeholder={
+                                "3 Designs per month\nLogo design\nJPG, PNG formats\n3–5 days turnaround\nEmail support"
+                            }
                         />
-
-                        {/* Features */}
-                        <div>
-                            <TextAreaField
-                                label="Features"
-                                name="featuresText"
-                                rows={4}
-                                value={form.featuresText || ""}
-                                onChange={handleChange}
-                                placeholder={`3 designs per month\nLogo design\nJPG, PNG formats\n3–5 days turnaround\nEmail support`}
-                            />
-                            <p className="mt-1 text-xs text-slate-500">
-                                Write <span className="font-semibold">one feature per line</span>{" "}
-                                (these will appear as bullet points under the plan).
-                            </p>
-                        </div>
+                        <p className="text-xs text-slate-500">
+                            Write <span className="font-semibold">one feature per line</span>.
+                            Each line will be shown with a green check icon on the plan card.
+                        </p>
 
                         {/* Price + billing */}
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -270,7 +228,7 @@ export default function PlanModal({
                                 value={form.price || ""}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. 99"
+                                placeholder="e.g. 699"
                             />
 
                             <SelectField
