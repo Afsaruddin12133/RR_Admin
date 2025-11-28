@@ -192,6 +192,7 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
       if (isCustom) {
         payload.custom_amount = String(parsedAmountForCalc);
       }
+      
 
       const res = await postIntiPayment(payload, milestoneId);
       if (!res) {
@@ -231,10 +232,6 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
 
   // ------------- 9) proof submission -------------
   const openProofModal = () => {
-    if (!initResponse?.transaction_id) {
-      setError("Initialize payment first.");
-      return;
-    }
     setProofReference("");
     setIsProofModalOpen(true);
   };
@@ -269,7 +266,7 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
       setProofSubmitting(false);
     }
   };
-
+  
   return (
     <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col gap-6 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -319,17 +316,17 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
       )}
 
       {/* Manual bank flow (shown after backend init returns payment_type=MANUAL and bank tab selected) */}
-      {initResponse?.payment_type === "MANUAL" && toggle === "bank" && (
+      {selectedProvider?.type === "BANK_TRANSFER" && toggle === "bank" && (
         <>
-          <ManualBankInfo data={initResponse} />
+          <ManualBankInfo data={selectedProvider} milestoneId={milestoneId}/>
 
           <button
             type="button"
             onClick={openProofModal}
-            disabled={!initResponse?.transaction_id || proofSubmitted === true}
+            disabled={proofSubmitted === true}
             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition
               ${
-                !initResponse?.transaction_id
+                !selectedProvider?.type
                   ? "bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200"
                   : "bg-green-600 text-white hover:bg-green-700"
               }`}
