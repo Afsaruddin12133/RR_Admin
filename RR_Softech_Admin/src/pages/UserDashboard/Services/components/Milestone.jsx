@@ -24,7 +24,7 @@ export default function Milestone({milestoneData,loading,setActiveTab,onSelectMi
       return;
     }
     alert(`Processing payment for: ${milestone.title} ($${milestone.amount})`);
-    setActiveTab("Payment")
+    setActiveTab("Payment");
   };
   return (
     <div className="bg-white shadow-md rounded-2xl p-6 border border-gray-200">

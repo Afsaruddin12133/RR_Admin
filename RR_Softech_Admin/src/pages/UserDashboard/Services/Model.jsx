@@ -121,6 +121,7 @@ useEffect(() => {
                 <PaymentSection
                   milestoneData={milestoneData || []}
                   milestoneId={selectedMilestoneId}
+                  setActiveTab={setActiveTab}
                   
                 />
               )}

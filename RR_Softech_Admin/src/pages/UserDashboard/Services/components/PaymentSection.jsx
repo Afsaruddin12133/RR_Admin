@@ -1,36 +1,41 @@
 // PaymentSection.jsx
 import { useEffect, useRef, useState } from "react";
-import { AdyenCheckout, Dropin } from "@adyen/adyen-web/auto";
+import { AdyenCheckout, Dropin } from "@adyen/adyen-web/auto"; // Must use /auto
 import "@adyen/adyen-web/styles/adyen.css";
+
 import { getSession } from "../../../../api/UserDashboard/payment";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
+import { toast } from "react-toastify";
 
 export default function PaymentSection({ milestoneData = {}, milestoneId }) {
+  
   const dropinRef = useRef(null);
   const [sessionInfo, setSessionInfo] = useState(null);
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dropinMounted, setDropinMounted] = useState(false);
-  console.log(sessionInfo);
-  console.log(dropinMounted);
+  const [error, setError] = useState(null);
 
-  // 1. Fetch session from backend using your getSession() API
+  // Step 1: Fetch Adyen session from backend
   useEffect(() => {
     async function fetchSession() {
       try {
         const payload = {
           amount: {
-            value: milestoneData.amount,
-            currency: "USD",
+            value: Number(milestoneData.amount), 
+            currency: "PLN",
           },
-          reference: milestoneId,
           returnUrl: "http://localhost:5173/customer/payment-success",
-          countryCode: "NL",
+          countryCode: "PL",
           provider_code: "adyen",
         };
 
         const session = await getSession(payload, milestoneId);
-        setSessionInfo(session);
+
+        setSessionInfo({
+          id: session.id,
+          sessionData: session.sessionData,
+          clientKey: session.clientKey,
+          environment: session.environment,
+        });
       } catch (e) {
         console.error("Failed to create Adyen session:", e);
         setError(e.message || "Something went wrong");
@@ -42,61 +47,75 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
     fetchSession();
   }, [milestoneData, milestoneId]);
 
-  // 2. Initialize & mount Adyen Drop-in when sessionInfo ready
+  // Step 2: Initialize Drop-in
   useEffect(() => {
-    if (sessionInfo && !dropinMounted && dropinRef.current) {
-      (async () => {
-        try {
-          const checkout = await AdyenCheckout({
-            clientKey: sessionInfo.clientKey,
-            environment: sessionInfo.environment,
-            session: {
-              id: sessionInfo.id,
-              sessionData: sessionInfo.sessionData,
-            },
-            amount: {
-              value: sessionInfo.finalChargeAmount,
-              currency: "USD",
-            },
-            locale: "nl-NL",
-            countryCode: "NL",
+    if (!sessionInfo || !dropinRef.current) return;
 
-            onPaymentCompleted: (result, component) => {
-              console.log("Payment completed:", result);
-              console.log("Payment component:", component);
+    async function initDropin() {
+      try {
+        const checkout = await AdyenCheckout({
+          environment: sessionInfo.environment,
+          clientKey: sessionInfo.clientKey,
+          session: {
+            id: sessionInfo.id,
+            sessionData: sessionInfo.sessionData,
+          },
+          amount: {
+            value: Number(milestoneData.amount),
+            currency: "PLN",
+          },
+          locale: "en-US",
+          translations: { en: {} },
 
-              // handle success — e.g. redirect or update state
-               window.location.href = "http://localhost:5173/customer/payment-success";
-            },
-            onError: (errorObj, component) => {
-              console.error("Payment error:", errorObj);
-              console.error("Payment component:", component);
-              setError(errorObj.message || "Payment failed");
-            },
-          });
+          countryCode: "PL",
 
-          new Dropin(checkout).mount(dropinRef.current);
+          onPaymentCompleted: () => {
+            toast.success("Payment Successful!");
 
-          setDropinMounted(true);
-        } catch (e) {
-          console.error("AdyenCheckout init failed:", e);
-          setError(e.message);
-        }
-      })();
+            window.location.href ="http://localhost:5173/customer/payment-success";  
+              
+          },
+          onPaymentFailed(result, component){
+            console.log("Payment failed:", result);
+            console.log("Payment Component:", component);
+          },
+          // onSubmit(state, component, actions){
+          //   console.log("onSubmit called with state:", state);
+          //   console.log("Component", component);
+          //   console.log("action", actions);
+            
+          // },
+
+          onError: (error) => {
+            console.error("Payment error:", error);
+            setError(error.message || "Payment failed");
+          },
+        });
+        
+        const dropin = new Dropin(checkout);
+        setTimeout(() => {
+          if (dropinRef.current) {
+            dropin.mount(dropinRef.current);
+          } else {
+            console.error("Drop-in root missing at mount time");
+          }
+        }, 0); // slight delay to ensure ref is ready
+        
+      } catch (e) {
+        console.error("Adyen init error:", e);
+        setError(e.message);
+      }
     }
-  }, [sessionInfo, dropinMounted]);
+    
+    initDropin();
+  }, [sessionInfo, milestoneData.amount]);
 
-  // 3. Render
-  if (loading) {
-    return <LoadingSpinner message="Loading payment options..." />;
-  }
-
-  if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
-  }
+  // Step 3: Render
+  if (loading) return <LoadingSpinner message="Loading payment options..." />;
+  if (error) return <div className="text-red-500">Error: {error}</div>;
 
   return (
-    <div className="w-full bg-white border border-gray-200 rounded-xl p-6 flex flex-col gap-6 shadow-sm">
+    <div className="w-full bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
       <div ref={dropinRef}></div>
     </div>
   );
