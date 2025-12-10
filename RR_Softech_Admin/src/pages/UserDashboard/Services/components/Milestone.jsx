@@ -1,6 +1,7 @@
 import { Clock, FileText, Trash2 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { statusColors } from "../../../../utils/UserDashboard/services/statusColors";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 
 export default function Milestone({milestoneData,loading,setActiveTab,onSelectMilestone }) {
@@ -12,7 +13,9 @@ export default function Milestone({milestoneData,loading,setActiveTab,onSelectMi
     setMilestones(milestoneData);
   },[milestoneData])
 
-  if(loading) `<p>Miletone are loading...</p>`
+   if (loading) {
+      return <LoadingSpinner  message = "Milestones are loading..." size="sm" variant="inline"/>;
+    }
   
   const handlePayNow = (id) => {
     const milestone = milestones.find((m) => m.id === id);
@@ -23,7 +26,6 @@ export default function Milestone({milestoneData,loading,setActiveTab,onSelectMi
       console.error("Milestone not found!");
       return;
     }
-    alert(`Processing payment for: ${milestone.title} ($${milestone.amount})`);
     setActiveTab("Payment");
   };
   return (

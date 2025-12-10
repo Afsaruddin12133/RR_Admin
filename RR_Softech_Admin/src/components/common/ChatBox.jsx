@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Paperclip, Send } from "lucide-react";
 import { fetchChatting, postChatting } from "../../api/UserDashboard/chatting";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default function ChatBox({
   currentUser = "CUSTOMER",
@@ -76,8 +77,6 @@ export default function ChatBox({
     const payload = {
       message: input.trim(),
       order: orderId,
-      // optionally include author info if your API expects it
-      // author_role: currentUser
     };
 
     try {
@@ -99,13 +98,6 @@ export default function ChatBox({
     }
   };
 
-  /**
-   * Correct bubble side logic (matches your spec):
-   *
-   * - If the message is from me -> right
-   * - If I'm CUSTOMER -> show ALL other roles on left
-   * - If I'm EMPLOYEE or OWNER -> CUSTOMER messages on left, others on right
-   */
   const bubbleSide = (msgRoleRaw) => {
     const me = (currentUser || "CUSTOMER").toUpperCase();
     const msgRole = (msgRoleRaw || "").toUpperCase();
@@ -158,17 +150,13 @@ export default function ChatBox({
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-3 sm:p-6">
         {loading && messages.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">Loading messages...</div>
+          <LoadingSpinner  message = "Message Loading..." size="sm" variant="inline"/>
         ) : messages.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">No messages yet. Say hi 👋</div>
+          <div className="text-center text-gray-400 py-8">No messages yet. Say Hi</div>
         ) : (
           messages.map((msg) => {
-            // Normalize role from API
             const roleRaw = msg.author?.role || msg.role || "UNKNOWN";
             const role = (roleRaw || "UNKNOWN").toUpperCase();
-
-            // Debugging tip: uncomment to inspect incoming messages & roles
-            // console.log("msg:", msg.id, "role:", role, "currentUser:", currentUser);
 
             const side = bubbleSide(role);
             const color = bubbleColor(role);

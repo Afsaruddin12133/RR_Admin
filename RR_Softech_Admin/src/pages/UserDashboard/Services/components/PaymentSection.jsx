@@ -1,6 +1,5 @@
-// PaymentSection.jsx
 import { useEffect, useRef, useState } from "react";
-import { AdyenCheckout, Dropin } from "@adyen/adyen-web/auto"; // Must use /auto
+import { AdyenCheckout, Dropin } from "@adyen/adyen-web/auto";
 import "@adyen/adyen-web/styles/adyen.css";
 
 import { getSession } from "../../../../api/UserDashboard/payment";
@@ -8,19 +7,19 @@ import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 import { toast } from "react-toastify";
 
 export default function PaymentSection({ milestoneData = {}, milestoneId }) {
-  
   const dropinRef = useRef(null);
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Step 1: Fetch Adyen session from backend
+  const isPaymentInProgress = useRef(false);
+
   useEffect(() => {
     async function fetchSession() {
       try {
         const payload = {
           amount: {
-            value: Number(milestoneData.amount), 
+            value: Number(milestoneData.amount),
             currency: "PLN",
           },
           returnUrl: "https://comfy-frangollo-1b27cb.netlify.app/customer/payment-success",
@@ -47,7 +46,6 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
     fetchSession();
   }, [milestoneData, milestoneId]);
 
-  // Step 2: Initialize Drop-in
   useEffect(() => {
     if (!sessionInfo || !dropinRef.current) return;
 
@@ -75,23 +73,24 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
             window.location.href ="https://comfy-frangollo-1b27cb.netlify.app/customer/payment-success";  
               
           },
-          onPaymentFailed(result, component){
+          onSubmit: () => {
+            if (isPaymentInProgress.current) {
+              toast.info("Payment is already in progress...");
+              return;
+            }
+            isPaymentInProgress.current = true;
+          },
+          onPaymentFailed(result, component) {
             console.log("Payment failed:", result);
             console.log("Payment Component:", component);
           },
-          // onSubmit(state, component, actions){
-          //   console.log("onSubmit called with state:", state);
-          //   console.log("Component", component);
-          //   console.log("action", actions);
-            
-          // },
 
           onError: (error) => {
             console.error("Payment error:", error);
             setError(error.message || "Payment failed");
           },
         });
-        
+
         const dropin = new Dropin(checkout);
         setTimeout(() => {
           if (dropinRef.current) {
@@ -100,17 +99,15 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
             console.error("Drop-in root missing at mount time");
           }
         }, 0); // slight delay to ensure ref is ready
-        
       } catch (e) {
         console.error("Adyen init error:", e);
         setError(e.message);
       }
     }
-    
+
     initDropin();
   }, [sessionInfo, milestoneData.amount]);
 
-  // Step 3: Render
   if (loading) return <LoadingSpinner message="Loading payment options..." />;
   if (error) return <div className="text-red-500">Error: {error}</div>;
 
