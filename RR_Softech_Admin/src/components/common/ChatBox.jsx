@@ -210,7 +210,7 @@ export default function ChatBox({
         <button
           onClick={handleSend}
           disabled={sending}
-          className="bg-[#0095FF] hover:bg-blue-600 text-white p-3 rounded flex items-center justify-center"
+          className="bg-[#0095FF] hover:bg-blue-600 text-white p-3 rounded flex items-center justify-center cursor-pointer"
           aria-label="Send message"
           type="button"
         >

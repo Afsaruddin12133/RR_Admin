@@ -80,7 +80,7 @@ export default function Milestone({milestoneData,loading,setActiveTab,onSelectMi
                 <td className="">
                   <button
                     onClick={() => handlePayNow(m.id)}
-                    className={`bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-sm flex items-center justify-center gap-2 mx-auto ${
+                    className={`bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 shadow-sm flex items-center justify-center gap-2 mx-auto cursor-pointer ${
                       m.status === "PAID" ? "hidden" : m.status
                     }`}
                   >
