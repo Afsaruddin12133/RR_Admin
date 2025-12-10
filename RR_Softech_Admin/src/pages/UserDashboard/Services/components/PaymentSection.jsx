@@ -23,7 +23,7 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
             value: Number(milestoneData.amount), 
             currency: "PLN",
           },
-          returnUrl: "http://localhost:5173/customer/payment-success",
+          returnUrl: "https://comfy-frangollo-1b27cb.netlify.app/customer/payment-success",
           countryCode: "PL",
           provider_code: "adyen",
         };
@@ -72,7 +72,7 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
           onPaymentCompleted: () => {
             toast.success("Payment Successful!");
 
-            window.location.href ="http://localhost:5173/customer/payment-success";  
+            window.location.href ="https://comfy-frangollo-1b27cb.netlify.app/customer/payment-success";  
               
           },
           onPaymentFailed(result, component){
