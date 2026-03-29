@@ -29,3 +29,7 @@ export async function deletePaymentProvider(id) {
     const res = await apiClient.delete(`payment-providers/${id}/`)
     return res.data;
 }
+export async function transctionStatusUpdate(id,payload) {
+    const res = await apiClient.post(`transactions/${id}/approve_transfer/`, payload)
+    return res.data;
+}
