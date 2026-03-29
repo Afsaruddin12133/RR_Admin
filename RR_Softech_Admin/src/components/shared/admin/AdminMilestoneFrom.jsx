@@ -145,7 +145,7 @@ export default function AdminMilestoneFrom({ selectedMilestoneId, onReload,autoR
           whileTap={{ scale: 0.97 }}
           type="submit"
           disabled={loading}
-          className="w-full py-3 mt-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-200"
+          className="w-full py-3 cursor-pointer mt-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-200"
         >
           {loading ? "Creating..." : "Create Milestone"}
         </motion.button>

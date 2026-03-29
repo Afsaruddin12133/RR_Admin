@@ -5,6 +5,8 @@ import { fetchTransactionsall } from "../../../api/UserDashboard/transaction";
 import { fetchUserDetails } from "../../../api/admin/users";
 import { statusColors } from "../../../utils/UserDashboard/services/statusColors";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import { Pencil, ShieldCheck, SquarePen } from "lucide-react";
+import { transctionStatusUpdate } from "../../../api/admin/paymentProviders";
 
 export default function TransactionDetails() {
   const { id } = useParams();
@@ -15,9 +17,34 @@ export default function TransactionDetails() {
   const [userSummary, setUserSummary] = useState(null);
   const [loading, setLoading] = useState(!transaction);
   const [userLoading, setUserLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(transaction.status);
+  const STATUS_OPTIONS = ["PENDING", "SUCCESS", "FAILED"];
 
-  console.log(transaction);
-  
+  const transactionStatusUpdate = async (transactionId, status) => {
+    try {
+      setLoading(true);
+
+      await transctionStatusUpdate(transactionId, { status });
+try {
+        const all = await fetchTransactionsall();
+        const found = (all || []).find((t) => String(t.id) === String(id));
+        setTransaction(found || null);
+      } catch (err) {
+        console.error("Failed to load transactions fallback:", err);
+      } finally {
+        setLoading(false);
+      }
+
+      // UI update (auto re-render)
+      setCurrentStatus(status);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Status update failed", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function ensureTransaction() {
@@ -124,10 +151,7 @@ export default function TransactionDetails() {
       const u = userSummary;
       const userDetails = [
         ["User ID", u.id],
-        [
-          "Name",
-          `${u.first_name || ""} ${u.last_name || ""}`.trim() || "N/A",
-        ],
+        ["Name", `${u.first_name || ""} ${u.last_name || ""}`.trim() || "N/A"],
         ["Email", u.email || "N/A"],
         ["Company", u.company_name || "N/A"],
         ["Phone", u.phone_number || "N/A"],
@@ -194,8 +218,9 @@ export default function TransactionDetails() {
       y += 14;
       const history = (u.transaction_history || []).slice(0, 10);
       history.forEach((h) => {
-        const line = `#${h.id} — ${h.plan_name || h.milestone_title || ""} — $${h.amount
-          } — ${h.status}`;
+        const line = `#${h.id} — ${h.plan_name || h.milestone_title || ""} — $${
+          h.amount
+        } — ${h.status}`;
         doc.text(line, left, y);
         y += 12;
         if (y > 740) {
@@ -377,9 +402,10 @@ export default function TransactionDetails() {
                   </div>
 
                   <div
-                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${statusColors[transaction.status] ||
+                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold ${
+                      statusColors[transaction.status] ||
                       "bg-slate-100 text-slate-700 border border-slate-200"
-                      }`}
+                    }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-current mr-2 animate-pulse"></span>
                     {transaction.status}
@@ -411,7 +437,7 @@ export default function TransactionDetails() {
 
                 <button
                   onClick={generatePDF}
-                  className="px-5 py-3 bg-linear-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-lg shadow-indigo-600/40 hover:shadow-xl hover:shadow-indigo-600/50 flex items-center gap-2"
+                  className="px-5 py-3 bg-linear-to-r from-indigo-600 to-indigo-700 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 shadow-lg shadow-indigo-600/40 hover:shadow-xl hover:shadow-indigo-600/50 flex items-center gap-2 cursor-pointer"
                 >
                   <svg
                     className="w-5 h-5"
@@ -460,14 +486,19 @@ export default function TransactionDetails() {
 
               <div className="p-6">
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                  <DetailRow label="Transaction ID" value={`#${transaction.id}`} />
+                  <DetailRow
+                    label="Transaction ID"
+                    value={`#${transaction.id}`}
+                  />
                   <DetailRow
                     label="Order Number"
                     value={transaction.order ? `#${transaction.order}` : null}
                   />
                   <DetailRow
                     label="Milestone ID"
-                    value={transaction.milestone ? `#${transaction.milestone}` : null}
+                    value={
+                      transaction.milestone ? `#${transaction.milestone}` : null
+                    }
                   />
                   <DetailRow
                     label="Plan / Milestone Title"
@@ -484,17 +515,54 @@ export default function TransactionDetails() {
                   <DetailRow
                     label="Status"
                     value={
-                      <span
-                        className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold ${statusColors[transaction.status] ||
-                          "bg-slate-100 text-slate-700"
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold ${
+                            statusColors[transaction.status] ||
+                            "bg-slate-100 text-slate-700"
                           }`}
-                      >
-                        <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
-                        {transaction.status}
-                      </span>
+                        >
+                          <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
+                          {transaction.status}
+                        </span>
+
+                        {/* Edit Button */}
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+                          title="Edit Status "
+                        >
+                          <SquarePen size={16} />
+                        </button>
+                        {/* Dropdown */}
+                        {isEditing && (
+                          <select
+                            disabled={loading}
+                            value={currentStatus}
+                            onChange={(e) =>
+                              transactionStatusUpdate(
+                                transaction.id,
+                                e.target.value
+                              )
+                            }
+                            className="ml-2 px-3 py-2 rounded-lg border border-slate-300
+            focus:ring-2 focus:ring-indigo-500"
+                          >
+                            {STATUS_OPTIONS.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
                     }
                   />
-                  <DetailRow label="Provider" value={transaction.provider_name} />
+
+                  <DetailRow
+                    label="Provider"
+                    value={transaction.provider_name}
+                  />
                   <DetailRow
                     label="Timestamp"
                     value={new Date(transaction.timestamp).toLocaleString(
@@ -533,60 +601,34 @@ export default function TransactionDetails() {
               <div className="p-6">
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
                   <DetailRow
-                    label="Gateway Transaction ID"
-                    value={
-                      transaction.gateway_txid_out ? (
-                        <span className="font-mono text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 inline-block">
-                          {transaction.gateway_txid_out}
-                        </span>
-                      ) : null
-                    }
-                    fullWidth
+                    label="Provider"
+                    value={transaction.provider_name}
                   />
                   <DetailRow
-                    label="Coin Type"
-                    value={transaction.gateway_coin_type}
-                  />
-                  <DetailRow
-                    label="Value in Coin"
+                    label="Merchant Reference"
                     value={
-                      transaction.gateway_value_in_coin
-                        ? `${transaction.gateway_value_in_coin}`
+                      transaction.merchant_reference
+                        ? `${transaction.merchant_reference}`
                         : null
                     }
                   />
                   <DetailRow
-                    label="Proof Reference"
+                    label="Gateway PSP Reference"
                     value={
-                      transaction.proof_reference_number ? (
-                        <span className="font-mono text-sm bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 inline-block text-amber-800">
-                          {transaction.proof_reference_number}
-                        </span>
-                      ) : null
+                      transaction.gateway_psp_reference
+                        ? `${transaction.gateway_psp_reference}`
+                        : null
                     }
-                    fullWidth
+                  />
+                  <DetailRow
+                    label="Gateway Session Id"
+                    value={
+                      transaction.gateway_session_id
+                        ? `${transaction.gateway_session_id}`
+                        : null
+                    }
                   />
                 </dl>
-
-                {transaction.proof_screenshot && (
-                  <div className="mt-6 pt-6 border-t border-slate-200">
-                    <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">
-                      Payment Proof Screenshot
-                    </h3>
-                    <div className="relative group">
-                      <img
-                        src={transaction.proof_screenshot}
-                        alt="Payment proof"
-                        className="w-full max-h-80 object-contain border-2 border-slate-200 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
-                      />
-                      <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-end justify-center pb-4">
-                        <span className="text-white text-sm font-medium">
-                          Click to view full size
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -738,9 +780,7 @@ export default function TransactionDetails() {
                       />
                       <StatCard
                         label="Cancelled"
-                        value={
-                          userSummary.order_stats?.cancelled_rejected ?? 0
-                        }
+                        value={userSummary.order_stats?.cancelled_rejected ?? 0}
                         icon={
                           <svg
                             className="w-4 h-4 text-white"
@@ -783,8 +823,7 @@ export default function TransactionDetails() {
                           Total Spend
                         </span>
                         <span className="text-lg font-bold text-emerald-600">
-                          $
-                          {userSummary.financial_stats?.total_spend_money ?? 0}
+                          ${userSummary.financial_stats?.total_spend_money ?? 0}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
@@ -834,7 +873,8 @@ export default function TransactionDetails() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-200">
-                          {(userSummary.transaction_history || []).length > 0 ? (
+                          {(userSummary.transaction_history || []).length >
+                          0 ? (
                             userSummary.transaction_history.map((t) => (
                               <tr
                                 key={t.id}
@@ -848,9 +888,10 @@ export default function TransactionDetails() {
                                 </td>
                                 <td className="py-3 px-3">
                                   <span
-                                    className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${statusColors[t.status] ||
+                                    className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
+                                      statusColors[t.status] ||
                                       "bg-slate-100 text-slate-700"
-                                      }`}
+                                    }`}
                                   >
                                     <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5"></span>
                                     {t.status}

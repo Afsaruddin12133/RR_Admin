@@ -23,6 +23,7 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
             currency: "PLN",
           },
           returnUrl: "https://comfy-frangollo-1b27cb.netlify.app/customer/payment-success",
+          //returnUrl: "http://localhost:5173/customer/payment-success",
           countryCode: "PL",
           provider_code: "adyen",
         };
@@ -70,6 +71,7 @@ export default function PaymentSection({ milestoneData = {}, milestoneId }) {
           onPaymentCompleted: () => {
             toast.success("Payment Successful!");
             window.location.href ="https://comfy-frangollo-1b27cb.netlify.app/customer/payment-success";  
+           // window.location.href ="http://localhost:5173/customer/payment-success";  
           },
           onPaymentFailed(result){
             console.log("Payment failed:", result);
